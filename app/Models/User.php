@@ -15,7 +15,7 @@ class User extends Authenticatable implements JWTSubject
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasUuids, HasRoles;
 
-    protected $primaryKey = 'id'; // Or your UUID column name
+    protected $primaryKey = self::ID; // Or your UUID column name
     public $incrementing = false;
     protected $keyType = 'string'; // UUIDs are strings
 
@@ -23,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
     const EMAIL = 'email';
     const PASSWORD = 'password';
     const NAME = 'name';
+    const EMAIL_VERIFIED_AT = 'email_verified_at';
 
     /**
      * The attributes that are mass assignable.

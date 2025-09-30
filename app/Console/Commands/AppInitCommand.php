@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Database\Seeders\PermissionsDemoSeeder;
+use Database\Seeders\UserRolePermissionSeeder;
 
 class AppInitCommand extends Command
 {
@@ -69,7 +69,7 @@ class AppInitCommand extends Command
 
     private function runRequiredSeeders(): void
     {
-        $this->call(self::DB_SEED, ['class' => PermissionsDemoSeeder::class]);
+        $this->call(self::DB_SEED, ['class' => UserRolePermissionSeeder::class]);
         // $this->call(self::DB_SEED);
     }
 

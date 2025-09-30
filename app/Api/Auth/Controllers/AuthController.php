@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Api\Auth\Requests\LoginRequest;
 use App\Api\Auth\Requests\RegisterRequest;
+use App\Models\Permission;
 
 class AuthController extends Controller
 {
@@ -150,7 +151,11 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $data = auth()->user()->only(User::ID, User::EMAIL, User::NAME);
+        $user = auth()->user();
+        $data = $user->only(User::ID, User::EMAIL, User::NAME);
+        $data['permissions'] = $user->getAllPermissions()->pluck(Permission::NAME);
+        $data['roles'] = $user->getRoleNames();
+
         return response()->json($data);
     }
 

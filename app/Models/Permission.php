@@ -13,4 +13,8 @@ class Permission extends SpatiePermission
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
+
+    const TABLE = 'permissions';
+    const ID = 'id';
+    const NAME = 'name';
 }

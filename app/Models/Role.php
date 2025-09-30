@@ -10,7 +10,11 @@ class Role extends SpatieRole
 {
     use HasFactory, HasUuids;
 
-    protected $primaryKey = 'id';
+    protected $primaryKey = self::ID;
     public $incrementing = false;
     protected $keyType = 'string';
+
+    const TABLE = 'permissions';
+    const ID = 'id';
+    const NAME = 'name';
 }
