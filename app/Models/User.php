@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
@@ -12,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasUuids, HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasUuids, HasRoles;
 
     protected $primaryKey = 'id'; // Or your UUID column name
     public $incrementing = false;
