@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\UserFakeSeeder;
 use Database\Seeders\UserRolePermissionSeeder;
 
 class AppInitCommand extends Command
@@ -75,6 +76,6 @@ class AppInitCommand extends Command
 
     private function runFakeDataSeeders(): void
     {
-        // $this->call(self::DB_SEED, ['class' => SocialNetworkSeeder::class]);
+        $this->call(self::DB_SEED, ['class' => UserFakeSeeder::class]);
     }
 }

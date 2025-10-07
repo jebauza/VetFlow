@@ -17,4 +17,10 @@ class Role extends SpatieRole
     const TABLE = 'permissions';
     const ID = 'id';
     const NAME = 'name';
+
+
+    const ADMIN_NAME = 'admin';
+    const VET_NAME = 'vet';
+    const ASSISTANT_NAME = 'assistant';
+    const RECEPTIONIST_NAME = 'receptionist';
 }

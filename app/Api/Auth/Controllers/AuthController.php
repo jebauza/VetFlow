@@ -132,7 +132,7 @@ class AuthController extends Controller
      *
      * **200 OK**
      * ```json
-     *{"id":"9ff8ac68-6f9b-4c14-96a8-c4086f30fabf","email":"pepe@gmail.com","name":"Pepe Gonzalez"}
+     *{"id":"a00ea363-ee42-446d-8c9b-d9f0bfb96048","email":"alberto.considine@example.org","name":"Orlo Mitchell MD","surname":"Goldner","avatar":null,"permissions":[],"roles":["receptionist"]}
      * ```
      *
      * **401 Unauthorized**
@@ -152,7 +152,13 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = auth()->user();
-        $data = $user->only(User::ID, User::EMAIL, User::NAME);
+        $data = $user->only(
+            User::ID,
+            User::EMAIL,
+            User::NAME,
+            User::SURNAME,
+            User::AVATAR,
+        );
         $data['permissions'] = $user->getAllPermissions()->pluck(Permission::NAME);
         $data['roles'] = $user->getRoleNames();
 

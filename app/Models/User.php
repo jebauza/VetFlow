@@ -23,7 +23,10 @@ class User extends Authenticatable implements JWTSubject
     const EMAIL = 'email';
     const PASSWORD = 'password';
     const NAME = 'name';
+    const SURNAME = 'surname';
+    const AVATAR = 'avatar';
     const EMAIL_VERIFIED_AT = 'email_verified_at';
+    const REMEMBER_TOKEN = 'remember_token';
 
     /**
      * The attributes that are mass assignable.

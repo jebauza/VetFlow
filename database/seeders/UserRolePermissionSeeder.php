@@ -51,6 +51,7 @@ class UserRolePermissionSeeder extends Seeder
                     [
                         User::ID => UuidHelper::newBinaryUuid(),
                         User::NAME => $user['name'],
+                        User::SURNAME => $user['name'],
                         User::EMAIL => $user['email'],
                         User::EMAIL_VERIFIED_AT => now(),
                         User::PASSWORD => Hash::make($user['password']),

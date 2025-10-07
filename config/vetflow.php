@@ -8,16 +8,22 @@ return [
 
     'roles' => [
         [
-            'name' => 'Super-Admin',
-            'permissions' => [
-                'superadmin'
-            ],
-        ],
-        [
             'name' => 'admin',
             'permissions' => [
                 'admin'
             ],
+        ],
+        [
+            'name' => 'vet',
+            'permissions' => [],
+        ],
+        [
+            'name' => 'assistant',
+            'permissions' => [],
+        ],
+        [
+            'name' => 'receptionist',
+            'permissions' => [],
         ],
     ],
 
