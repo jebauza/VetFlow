@@ -44,10 +44,10 @@ class UserRolePermissionSeeder extends Seeder
         $allRoles = Role::get();
 
         // Create users
-        User::query()->whereNotIn(User::EMAIL, array_column($configUsers, 'email'))->delete();
+        User::whereNotIn(User::EMAIL, array_column($configUsers, 'email'))->delete();
         foreach ($configUsers as $user) {
             if (!empty($user['email'])) {
-                User::query()->upsert(
+                User::upsert(
                     [
                         User::ID => UuidHelper::newBinaryUuid(),
                         User::NAME => $user['name'],

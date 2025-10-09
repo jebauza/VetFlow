@@ -43,10 +43,10 @@ class AppInitCommand extends Command
     {
         $this->runQueries([
             'CREATE SCHEMA IF NOT EXISTS "public"',
-            // 'DROP SCHEMA IF EXISTS "be" CASCADE',
-            // 'CREATE SCHEMA IF NOT EXISTS "be"',
-            // 'DROP SCHEMA IF EXISTS "etl" CASCADE',
-            // 'CREATE SCHEMA IF NOT EXISTS "etl"',
+            'DROP SCHEMA IF EXISTS "be" CASCADE',
+            'CREATE SCHEMA IF NOT EXISTS "be"',
+            'DROP SCHEMA IF EXISTS "testing" CASCADE',
+            'CREATE SCHEMA IF NOT EXISTS "testing"',
             'DROP EXTENSION IF EXISTS "uuid-ossp"',
             'CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH schema "public"',
         ]);
@@ -55,7 +55,7 @@ class AppInitCommand extends Command
 
         $this->runRequiredSeeders();
 
-        if ($this->option('seed')) {
+        if ($this->option('seed') || $this->option('all')) {
             $this->runFakeDataSeeders();
         }
     }
