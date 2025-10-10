@@ -16,7 +16,7 @@ class StoreRoleRequest extends ApiRequest
     {
         return [
             'name' => 'required|string|unique:roles,name',
-            'permissions' => 'required|array',
+            'permissions' => 'present|array',
             'permissions.*' => 'uuid',
         ];
     }
@@ -40,13 +40,12 @@ class StoreRoleRequest extends ApiRequest
     public function checkPermissions($validator): void
     {
         $permissions = Permission::whereIn(Permission::ID, $this->permissions)->pluck(Permission::ID);
-
         $notValidIds = collect($this->permissions)->diff($permissions);
 
         foreach ($notValidIds as $key => $id) {
             $validator->errors()->add(
-                'permissions.' . $key,
-                "El permiso '$id' no es válido."
+                "permissions.$key",
+                "The permission ($id) is not valid."
             );
         }
     }

@@ -3,9 +3,6 @@
 namespace Tests\Feature\Api\Auth;
 
 use Tests\TestCase;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class LoginApiTest extends TestCase
@@ -14,11 +11,11 @@ class LoginApiTest extends TestCase
 
     private $api = 'api/auth/login';
 
-    public function test_login_with_valid_credentials(): void
+    public function test_login(): void
     {
         $response = $this->postJson($this->api, [
-            'email' => env('USER_SUPERADMIN_EMAIL'),
-            'password' => env('USER_SUPERADMIN_PASSWORD'),
+            'email' => $this->superAdminEmail(),
+            'password' => $this->superAdminPassword(),
         ]);
 
         $response->assertStatus(200)
@@ -32,11 +29,21 @@ class LoginApiTest extends TestCase
     public function test_login_with_invalid_credentials(): void
     {
         $response = $this->postJson($this->api, [
-            'email' => env('USER_SUPERADMIN_EMAIL'),
+            'email' => $this->superAdminEmail(),
             'password' => 'wrongpass',
         ]);
 
         $response->assertStatus(401)
-            ->assertJson(['error' => 'Unauthorised']);
+            ->assertJson(['message' => 'Unauthorized']);
+    }
+
+    public function test_login_validation_with_invalid_data(): void
+    {
+        $response = $this->postJson($this->api, [
+            'email' => 'gleichner.erick',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonStructure(['email', 'password']);
     }
 }

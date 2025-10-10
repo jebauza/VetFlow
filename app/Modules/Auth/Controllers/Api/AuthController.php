@@ -5,14 +5,16 @@ namespace App\Modules\Auth\Controllers\Api;
 use App\Models\User;
 use App\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Common\Controllers\ApiController;
 use App\Modules\Auth\Requests\LoginRequest;
 use App\Modules\Auth\Requests\RegisterRequest;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     /**
      * Register a User.
@@ -41,7 +43,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 201|422|500
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -79,7 +81,7 @@ class AuthController extends Controller
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -96,23 +98,21 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|422|500
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only([User::EMAIL, User::PASSWORD]);
 
         try {
             DB::beginTransaction();
-
             if (! $token = Auth::attempt($credentials)) {
-                return response()->json(['error' => 'Unauthorised'], 401);
+                return $this->sendError('Unauthorized', 401);
             }
-
             DB::commit();
 
             return $this->respondWithToken($token);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->sendError500($e->getMessage());
         }
     }
 
@@ -149,7 +149,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
         $user = auth()->user();
         $data = $user->only(
@@ -198,7 +198,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         return $this->respondWithToken(auth()->refresh());
     }
@@ -211,6 +211,11 @@ class AuthController extends Controller
     /**
      *
      * @lrd:start
+     *
+     * **Set Global Headers**
+     * ```json
+     *{"Authorization": "Bearer <access_token>", "Content-Type": "application/json", "Accept": "application/json"}
+     * ```
      *
      * **200 OK**
      * ```json
@@ -231,7 +236,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         auth()->logout();
 
@@ -245,7 +250,7 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function respondWithToken($token)
+    protected function respondWithToken($token): JsonResponse
     {
         $expires_in_minutes = auth()->factory()->getTTL();
 

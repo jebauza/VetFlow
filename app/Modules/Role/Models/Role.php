@@ -14,7 +14,7 @@ class Role extends SpatieRole
     public $incrementing = false;
     protected $keyType = 'string';
 
-    const TABLE = 'permissions';
+    const TABLE = 'roles';
     const ID = 'id';
     const NAME = 'name';
 

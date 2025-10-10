@@ -3,17 +3,15 @@
 namespace Tests\Feature\Api\Auth;
 
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class MeApiTest extends TestCase
+class RefreshApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private $api = 'api/auth/me';
+    private $api = 'api/auth/refresh';
 
-    public function test_me()
+    public function test_refresh()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -22,19 +20,15 @@ class MeApiTest extends TestCase
             'Authorization' => "Bearer {$token}",
         ])->getJson($this->api);
 
-        $response->assertOk()
-            ->assertJson([
-                'id' => $user->{User::ID},
-                'email' => $user->{User::EMAIL},
-                'name' => $user->{User::NAME},
-                'surname' => $user->{User::SURNAME},
-                'avatar' => $user->{User::AVATAR},
-                'permissions' => $user->getAllPermissions()->pluck(Permission::NAME)->toArray(),
-                'roles' => $user->getRoleNames()->toArray(),
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'access_token',
+                'token_type',
+                'expires_at',
             ]);
     }
 
-    public function test_me_with_invalid_token()
+    public function test_refresh_with_invalid_token()
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer invalid_token',
