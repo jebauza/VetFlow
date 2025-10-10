@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Api\Auth\Controllers\AuthController;
+use App\Modules\Auth\Controllers\Api\AuthController;
 
 Route::middleware('api')->group(function () {
 

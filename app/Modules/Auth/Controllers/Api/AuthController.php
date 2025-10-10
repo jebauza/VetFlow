@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Api\Auth\Controllers;
+namespace App\Modules\Auth\Controllers\Api;
 
 use App\Models\User;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Api\Auth\Requests\LoginRequest;
-use App\Api\Auth\Requests\RegisterRequest;
-use App\Models\Permission;
+use App\Modules\Auth\Requests\LoginRequest;
+use App\Modules\Auth\Requests\RegisterRequest;
 
 class AuthController extends Controller
 {
