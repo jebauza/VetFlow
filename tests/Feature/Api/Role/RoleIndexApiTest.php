@@ -11,7 +11,7 @@ class RoleIndexApiTest extends TestCase
 
     private $api = 'api/roles';
 
-    public function test_roles()
+    public function test_index()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -27,7 +27,7 @@ class RoleIndexApiTest extends TestCase
             ]);
     }
 
-    public function test_roles_with_invalid_token()
+    public function test_index_with_invalid_token()
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer invalid_token',

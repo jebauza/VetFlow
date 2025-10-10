@@ -2,7 +2,9 @@
 
 namespace App\Modules\Role\Repositories;
 
+use App\Models\Permission;
 use App\Modules\Role\Models\Role;
+use App\Modules\Role\Requests\StoreRoleRequest;
 
 class RoleRepository
 {
@@ -18,7 +20,14 @@ class RoleRepository
 
     public function create(array $data): Role
     {
-        return Role::create($data);
+        $role = Role::create([
+            Role::NAME => $data[StoreRoleRequest::NAME]
+        ]);
+
+        $permissions = Permission::whereIn(Permission::ID, $data[StoreRoleRequest::PERMISSION_IDS])->get();
+        $role->syncPermissions($permissions);
+
+        return $role;
     }
 
     public function update(Role $role, array $data): Role

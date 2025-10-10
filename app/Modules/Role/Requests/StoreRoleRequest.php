@@ -7,6 +7,9 @@ use App\Models\Permission;
 
 class StoreRoleRequest extends ApiRequest
 {
+    const NAME = 'name';
+    const PERMISSION_IDS = 'permission_ids';
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -15,9 +18,9 @@ class StoreRoleRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|unique:roles,name',
-            'permissions' => 'present|array',
-            'permissions.*' => 'uuid',
+            self::NAME => 'required|string|unique:roles,name',
+            self::PERMISSION_IDS => 'present|array',
+            self::PERMISSION_IDS . '.*' => 'uuid',
         ];
     }
 
@@ -39,12 +42,12 @@ class StoreRoleRequest extends ApiRequest
 
     public function checkPermissions($validator): void
     {
-        $permissions = Permission::whereIn(Permission::ID, $this->permissions)->pluck(Permission::ID);
-        $notValidIds = collect($this->permissions)->diff($permissions);
+        $permissions = Permission::whereIn(Permission::ID, $this->{self::PERMISSION_IDS})->pluck(Permission::ID);
+        $notValidIds = collect($this->{self::PERMISSION_IDS})->diff($permissions);
 
         foreach ($notValidIds as $key => $id) {
             $validator->errors()->add(
-                "permissions.$key",
+                self::PERMISSION_IDS . ".$key",
                 "The permission ($id) is not valid."
             );
         }

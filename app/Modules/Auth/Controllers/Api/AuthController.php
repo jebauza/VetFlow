@@ -86,7 +86,7 @@ class AuthController extends ApiController
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"message":"The email field must be a valid email address.","errors":{"email":["The email field must be a valid email address."]}}
+     *{"email":["The email field must be a valid email address."],"password":["The password field is required."]}
      * ```
      *
      * **500 Internal Server Error**
