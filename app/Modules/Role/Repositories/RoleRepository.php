@@ -5,6 +5,7 @@ namespace App\Modules\Role\Repositories;
 use App\Models\Permission;
 use App\Modules\Role\Models\Role;
 use App\Modules\Role\Requests\StoreRoleRequest;
+use App\Modules\Role\Requests\UpdateRoleRequest;
 
 class RoleRepository
 {
@@ -24,20 +25,28 @@ class RoleRepository
             Role::NAME => $data[StoreRoleRequest::NAME]
         ]);
 
-        $permissions = Permission::whereIn(Permission::ID, $data[StoreRoleRequest::PERMISSION_IDS])->get();
-        $role->syncPermissions($permissions);
-
-        return $role;
+        return $this->syncPermissionIdsToRole($role, $data[StoreRoleRequest::PERMISSION_IDS]);
     }
 
     public function update(Role $role, array $data): Role
     {
-        $role->update($data);
-        return $role;
+        $role->update([
+            Role::NAME => $data[UpdateRoleRequest::NAME]
+        ]);
+
+        return $this->syncPermissionIdsToRole($role, $data[UpdateRoleRequest::PERMISSION_IDS]);
     }
 
     public function delete(Role $role)
     {
         $role->delete();
+    }
+
+    private function syncPermissionIdsToRole(Role $role, array $permissionIds): Role
+    {
+        $permissions = Permission::whereIn(Permission::ID, $permissionIds)->get();
+        $role->syncPermissions($permissions);
+
+        return $role;
     }
 }

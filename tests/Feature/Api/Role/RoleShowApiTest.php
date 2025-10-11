@@ -13,7 +13,7 @@ class RoleShowApiTest extends TestCase
 
     private $api = 'api/roles/:id';
 
-    public function test_show()
+    public function test_show_200()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -30,7 +30,7 @@ class RoleShowApiTest extends TestCase
             ]);
     }
 
-    public function test_show_with_invalid_token()
+    public function test_show_with_invalid_token_401()
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer invalid_token',
@@ -42,7 +42,7 @@ class RoleShowApiTest extends TestCase
             ]);
     }
 
-    public function test_show_validation()
+    public function test_show_validation_422()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -52,10 +52,10 @@ class RoleShowApiTest extends TestCase
         ])->getJson($this->api);
 
         $response->assertStatus(422)
-            ->assertJsonStructure(['id']);
+            ->assertJsonStructure(['role']);
     }
 
-    public function test_show_with_invalid_id()
+    public function test_show_with_invalid_id_404()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
