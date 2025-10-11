@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Auth\Controllers\Api\AuthController;
+use App\Modules\Role\Controllers\Api\RoleApiController;
 
 Route::middleware('api')->group(function () {
 
@@ -14,5 +15,9 @@ Route::middleware('api')->group(function () {
             Route::get('/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
             Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
         });
+    });
+
+    Route::middleware('auth:api')->group(function () {
+        Route::apiResource('roles', RoleApiController::class);
     });
 });

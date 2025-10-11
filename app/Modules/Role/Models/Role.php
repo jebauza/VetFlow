@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Role\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +14,7 @@ class Role extends SpatieRole
     public $incrementing = false;
     protected $keyType = 'string';
 
-    const TABLE = 'permissions';
+    const TABLE = 'roles';
     const ID = 'id';
     const NAME = 'name';
 
