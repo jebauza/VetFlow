@@ -3,19 +3,15 @@
 namespace App\Modules\Role\Controllers\Api;
 
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Modules\Role\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Common\Controllers\ApiController;
-use Illuminate\Support\Facades\Validator;
 use App\Modules\Role\Services\RoleService;
 use App\Modules\Role\Resources\RoleResource;
 use App\Modules\Role\Requests\StoreRoleRequest;
 use App\Modules\Role\Requests\UpdateRoleRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
-class RoleController extends ApiController
+class RoleApiController extends ApiController
 {
     protected RoleService $service;
 

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Auth\Controllers\Api\AuthController;
-use App\Modules\Role\Controllers\Api\RoleController;
+use App\Modules\Role\Controllers\Api\RoleApiController;
 
 Route::middleware('api')->group(function () {
 
@@ -18,6 +18,6 @@ Route::middleware('api')->group(function () {
     });
 
     Route::middleware('auth:api')->group(function () {
-        Route::apiResource('roles', RoleController::class);
+        Route::apiResource('roles', RoleApiController::class);
     });
 });
