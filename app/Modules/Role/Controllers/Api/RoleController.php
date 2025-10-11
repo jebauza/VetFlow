@@ -222,10 +222,63 @@ class RoleController extends ApiController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @lrd:start
+     *
+     * **Notes**
+     * - Requires **Access Token** obtained from **auth/login**, configuration in **auth/me**.
+     *
+     * **Description**
+     * - Remove the specified resource from storage.
+     *
+     * **200 OK**
+     * ```json
+     *{"message":"Deleted successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
+     * ```
+     *
+     * **401 Unauthorized**
+     * ```json
+     *{"message":"Unauthenticated."}
+     * ```
+     *
+     * **404 Not Found**
+     * ```json
+     *{"message": "No query results for model [App\\Modules\\Role\\Models\\Role] a014efff-69d0-46a4-877f-6b98c428e978"}
+     * ```
+     *
+     * **422 Unprocessable Entity**
+     * ```json
+     *{"role":["Must be a valid UUID."]}
+     * ```
+     *
+     * **500 Internal Server Error**
+     * ```json
+     *{"message":"Internal Server Error"}
+     * ```
+     *
+     * @lrd:end
+     *
+     * @LRDresponses 200|401|404|422|500
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
-        dd('role destroy');
+        if (!Str::isUuid($id)) {
+            return $this->sendError422(['role' => [__('Must be a valid UUID.')]]);
+        }
+
+        $role = $this->service->getRoleById($id);
+
+        try {
+            DB::beginTransaction();
+            $this->service->deleteRole($role);
+            DB::commit();
+
+            return $this->sendResponse(
+                __('Deleted successfully'),
+                (new RoleResource($role)),
+            );
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $this->sendError500($th->getMessage());
+        }
     }
 }

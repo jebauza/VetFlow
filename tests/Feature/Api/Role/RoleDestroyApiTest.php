@@ -7,13 +7,13 @@ use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class RoleShowApiTest extends TestCase
+class RoleDestroyApiTest extends TestCase
 {
     use RefreshDatabase;
 
     private $api = 'api/roles/:id';
 
-    public function test_show_200()
+    public function test_destroy_200()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -21,7 +21,7 @@ class RoleShowApiTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$token}",
-        ])->getJson(str_replace(':id', $role->{Role::ID}, $this->api));
+        ])->deleteJson(str_replace(':id', $role->{Role::ID}, $this->api));
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -30,11 +30,11 @@ class RoleShowApiTest extends TestCase
             ]);
     }
 
-    public function test_show_with_invalid_token_401()
+    public function test_destroy_with_invalid_token_401()
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer invalid_token',
-        ])->getJson($this->api);
+        ])->deleteJson($this->api);
 
         $response->assertStatus(401)
             ->assertJson([
@@ -42,7 +42,7 @@ class RoleShowApiTest extends TestCase
             ]);
     }
 
-    public function test_show_validation_422()
+    public function test_destroy_validation_422()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -55,7 +55,7 @@ class RoleShowApiTest extends TestCase
             ->assertJsonStructure(['role']);
     }
 
-    public function test_show_role_id_not_found_404()
+    public function test_destroy_role_id_not_found_404()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
