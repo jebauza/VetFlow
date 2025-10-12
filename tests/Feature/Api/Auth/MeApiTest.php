@@ -4,7 +4,7 @@ namespace Tests\Feature\Api\Auth;
 
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\Permission;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MeApiTest extends TestCase

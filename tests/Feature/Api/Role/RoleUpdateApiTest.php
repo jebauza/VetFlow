@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Feature\Api\Auth;
+namespace Tests\Feature\Api\Role;
 
 use Tests\TestCase;
-use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class RoleUpdateApiTest extends TestCase

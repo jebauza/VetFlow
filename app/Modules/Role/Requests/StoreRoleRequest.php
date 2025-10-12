@@ -3,7 +3,7 @@
 namespace App\Modules\Role\Requests;
 
 use App\Common\Requests\ApiRequest;
-use App\Models\Permission;
+use App\Modules\Permission\Models\Permission;
 
 class StoreRoleRequest extends ApiRequest
 {

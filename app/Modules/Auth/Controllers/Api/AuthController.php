@@ -3,7 +3,6 @@
 namespace App\Modules\Auth\Controllers\Api;
 
 use App\Models\User;
-use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Common\Controllers\ApiController;
 use App\Modules\Auth\Requests\LoginRequest;
+use App\Modules\Permission\Models\Permission;
 use App\Modules\Auth\Requests\RegisterRequest;
 
 class AuthController extends ApiController

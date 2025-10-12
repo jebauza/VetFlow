@@ -3,12 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Permission;
 use Illuminate\Database\Seeder;
 use App\Modules\Role\Models\Role;
 use App\Common\Helpers\UuidHelper;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
+use App\Modules\Permission\Models\Permission;
 
 class UserRolePermissionSeeder extends Seeder
 {

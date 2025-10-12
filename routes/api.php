@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Modules\Auth\Controllers\Api\AuthController;
 use App\Modules\Role\Controllers\Api\RoleApiController;
+use App\Modules\Permission\Controllers\Api\ShowPermissionsApiController;
 
 Route::middleware('api')->group(function () {
 
@@ -18,6 +19,8 @@ Route::middleware('api')->group(function () {
     });
 
     Route::middleware('auth:api')->group(function () {
+        Route::get('/permissions', ShowPermissionsApiController::class)->name('permissions.index');
+
         Route::apiResource('roles', RoleApiController::class);
     });
 });
