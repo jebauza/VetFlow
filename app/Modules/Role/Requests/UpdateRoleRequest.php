@@ -2,9 +2,9 @@
 
 namespace App\Modules\Role\Requests;
 
-use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Common\Requests\ApiRequest;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateRoleRequest extends ApiRequest
@@ -56,19 +56,6 @@ class UpdateRoleRequest extends ApiRequest
             }
         });
     }
-
-    // public function checkExistId($id): void
-    // {
-    //     $permissions = Permission::whereIn(Permission::ID, $this->{self::PERMISSION_IDS})->pluck(Permission::ID);
-    //     $notValidIds = collect($this->{self::PERMISSION_IDS})->diff($permissions);
-
-    //     foreach ($notValidIds as $key => $id) {
-    //         $validator->errors()->add(
-    //             self::PERMISSION_IDS . ".$key",
-    //             "The permission ($id) is not valid."
-    //         );
-    //     }
-    // }
 
     public function checkPermissions($validator): void
     {

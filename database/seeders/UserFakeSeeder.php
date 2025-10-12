@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Permission;
 use Illuminate\Database\Seeder;
 use App\Modules\Role\Models\Role;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class UserFakeSeeder extends Seeder

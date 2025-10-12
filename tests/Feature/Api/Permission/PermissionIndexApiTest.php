@@ -1,15 +1,15 @@
 <?php
 
-namespace Tests\Feature\Api\Role;
+namespace Tests\Feature\Api\Permission;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class RoleIndexApiTest extends TestCase
+class PermissionIndexApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private $api = 'api/roles';
+    private $api = 'api/permissions';
 
     public function test_index_200()
     {

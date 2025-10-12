@@ -2,8 +2,8 @@
 
 namespace App\Modules\Role\Repositories;
 
-use App\Models\Permission;
 use App\Modules\Role\Models\Role;
+use App\Modules\Permission\Models\Permission;
 use App\Modules\Role\Requests\StoreRoleRequest;
 use App\Modules\Role\Requests\UpdateRoleRequest;
 

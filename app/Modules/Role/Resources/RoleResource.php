@@ -2,8 +2,8 @@
 
 namespace App\Modules\Role\Resources;
 
-use App\Models\Permission;
 use Illuminate\Http\Request;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RoleResource extends JsonResource
