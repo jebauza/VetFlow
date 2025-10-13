@@ -2,8 +2,9 @@
 
 namespace App\Modules\Role\Services;
 
-use App\Modules\Role\Repositories\RoleRepository;
 use App\Modules\Role\Models\Role;
+use App\Modules\Role\DTOs\RoleDTO;
+use App\Modules\Role\Repositories\RoleRepository;
 
 class RoleService
 {
@@ -24,14 +25,26 @@ class RoleService
         return $this->repo->find($id);
     }
 
-    public function createRole(array $data): Role
+    public function createRole(RoleDTO $dto): Role
     {
-        return $this->repo->create($data);
+        $role = $this->repo->create([
+            Role::NAME => $dto->{RoleDTO::NAME},
+        ]);
+
+        $role->syncPermissions($dto->{RoleDTO::PERMISSION_IDS});
+
+        return $role->load('permissions');
     }
 
-    public function updateRole(Role $role, array $data): Role
+    public function updateRole(Role $role, RoleDTO $dto): Role
     {
-        return $this->repo->update($role, $data);
+        $role = $this->repo->update($role, [
+            Role::NAME => $dto->{RoleDTO::NAME},
+        ]);
+
+        $role->syncPermissions($dto->{RoleDTO::PERMISSION_IDS});
+
+        return $role->load('permissions');
     }
 
     public function deleteRole(Role $role)

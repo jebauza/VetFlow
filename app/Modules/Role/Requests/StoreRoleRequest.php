@@ -2,35 +2,21 @@
 
 namespace App\Modules\Role\Requests;
 
+use App\Modules\Role\DTOs\RoleDTO;
 use App\Common\Requests\ApiRequest;
-use App\Modules\Permission\Models\Permission;
+use App\Modules\Permission\Repositories\PermissionRepository;
 
 class StoreRoleRequest extends ApiRequest
 {
-    const NAME = 'name';
-    const PERMISSION_IDS = 'permission_ids';
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            self::NAME => 'required|string|unique:roles,name',
-            self::PERMISSION_IDS => 'present|array',
-            self::PERMISSION_IDS . '.*' => 'uuid',
+            RoleDTO::NAME => 'required|string|unique:roles,name',
+            RoleDTO::PERMISSION_IDS => 'present|array',
+            RoleDTO::PERMISSION_IDS . '.*' => 'uuid',
         ];
     }
 
-    /**
-     * Method withValidator
-     *
-     * @param $validator $validator [explicite description]
-     *
-     * @return void
-     */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
@@ -42,12 +28,13 @@ class StoreRoleRequest extends ApiRequest
 
     public function checkPermissions($validator): void
     {
-        $permissions = Permission::whereIn(Permission::ID, $this->{self::PERMISSION_IDS})->pluck(Permission::ID);
-        $notValidIds = collect($this->{self::PERMISSION_IDS})->diff($permissions);
+        $permissionRepo = app(PermissionRepository::class);
+        $validIds = $permissionRepo->getValidIds($this->{RoleDTO::PERMISSION_IDS});
+        $notValidIds = collect($this->{RoleDTO::PERMISSION_IDS})->diff($validIds);
 
         foreach ($notValidIds as $key => $id) {
             $validator->errors()->add(
-                self::PERMISSION_IDS . ".$key",
+                RoleDTO::PERMISSION_IDS . ".$key",
                 "The permission ($id) is not valid."
             );
         }

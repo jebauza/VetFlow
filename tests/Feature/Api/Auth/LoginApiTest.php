@@ -11,14 +11,13 @@ class LoginApiTest extends TestCase
 
     private $api = 'api/auth/login';
 
-    public function test_login(): void
+    public function test_login_200(): void
     {
-        $response = $this->postJson($this->api, [
+        $this->postJson($this->api, [
             'email' => $this->superAdminEmail(),
             'password' => $this->superAdminPassword(),
-        ]);
-
-        $response->assertStatus(200)
+        ])
+            ->assertStatus(200)
             ->assertJsonStructure([
                 'access_token',
                 'token_type',
@@ -26,24 +25,22 @@ class LoginApiTest extends TestCase
             ]);
     }
 
-    public function test_login_with_invalid_credentials(): void
+    public function test_login_with_invalid_credentials_401(): void
     {
-        $response = $this->postJson($this->api, [
+        $this->postJson($this->api, [
             'email' => $this->superAdminEmail(),
             'password' => 'wrongpass',
-        ]);
-
-        $response->assertStatus(401)
+        ])
+            ->assertStatus(401)
             ->assertJson(['message' => 'Unauthorized']);
     }
 
-    public function test_login_validation_with_invalid_data(): void
+    public function test_login_validation_with_invalid_data_422(): void
     {
-        $response = $this->postJson($this->api, [
+        $this->postJson($this->api, [
             'email' => 'gleichner.erick',
-        ]);
-
-        $response->assertStatus(422)
+        ])
+            ->assertStatus(422)
             ->assertJsonStructure(['email', 'password']);
     }
 }

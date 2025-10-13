@@ -13,16 +13,14 @@ class MeApiTest extends TestCase
 
     private $api = 'api/auth/me';
 
-    public function test_me()
+    public function test_me_200()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson($this->api);
-
-        $response->assertOk()
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson($this->api)
+            ->assertOk()
             ->assertJson([
                 'id' => $user->{User::ID},
                 'email' => $user->{User::EMAIL},
@@ -34,13 +32,11 @@ class MeApiTest extends TestCase
             ]);
     }
 
-    public function test_me_with_invalid_token()
+    public function test_me_with_invalid_token_401()
     {
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer invalid_token',
-        ])->getJson($this->api);
-
-        $response->assertStatus(401)
+        $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
+            ->getJson($this->api)
+            ->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthenticated.',
             ]);
