@@ -16,11 +16,9 @@ class RoleIndexApiTest extends TestCase
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson($this->api);
-
-        $response->assertOk()
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson($this->api)
+            ->assertOk()
             ->assertJsonStructure([
                 'message',
                 'data',
@@ -29,11 +27,9 @@ class RoleIndexApiTest extends TestCase
 
     public function test_index_with_invalid_token_401()
     {
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer invalid_token',
-        ])->getJson($this->api);
-
-        $response->assertStatus(401)
+        $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
+            ->getJson($this->api)
+            ->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthenticated.',
             ]);

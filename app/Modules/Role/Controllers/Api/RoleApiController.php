@@ -4,6 +4,7 @@ namespace App\Modules\Role\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
+use App\Modules\Role\DTOs\RoleDTO;
 use Illuminate\Support\Facades\DB;
 use App\Common\Controllers\ApiController;
 use App\Modules\Role\Services\RoleService;
@@ -91,9 +92,11 @@ class RoleApiController extends ApiController
      */
     public function store(StoreRoleRequest $request): JsonResponse
     {
+        $dto = new RoleDTO(...$request->validated());
+
         try {
             DB::beginTransaction();
-            $role = $this->service->createRole($request->validated());
+            $role = $this->service->createRole($dto);
             DB::commit();
 
             return $this->sendResponse(
@@ -199,11 +202,12 @@ class RoleApiController extends ApiController
      */
     public function update(UpdateRoleRequest $request, string $id)
     {
+        $dto = new RoleDTO(...$request->validated());
         $role = $this->service->getRoleById($id);
 
         try {
             DB::beginTransaction();
-            $role = $this->service->updateRole($role, $request->validated());
+            $role = $this->service->updateRole($role, $dto);
             DB::commit();
 
             return $this->sendResponse(

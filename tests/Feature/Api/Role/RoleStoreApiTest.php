@@ -20,12 +20,11 @@ class RoleStoreApiTest extends TestCase
         $token = $this->getAccessToken($user);
         $permissions = Permission::inRandomOrder()->limit(5)->get();
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->postJson($this->api, [
-            "name" => "Role Test",
-            "permission_ids" => $permissions->pluck(Permission::ID)->toArray(),
-        ]);
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->postJson($this->api, [
+                "name" => "Role Test",
+                "permission_ids" => $permissions->pluck(Permission::ID)->toArray(),
+            ]);
 
         $response->assertCreated()
             ->assertJson([
@@ -62,53 +61,45 @@ class RoleStoreApiTest extends TestCase
 
 
         // Data not valid
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->postJson($this->api, [
-            "name" => "",
-            "permission_ids" => [
-                'not-a-uuid',
-            ],
-        ]);
-
-        $response->assertStatus(422)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->postJson($this->api, [
+                "name" => "",
+                "permission_ids" => [
+                    'not-a-uuid',
+                ],
+            ])
+            ->assertStatus(422)
             ->assertJsonStructure(['name', 'permission_ids.0']);
 
 
         // Name already exists DB
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->postJson($this->api, [
-            "name" => Role::first()->{Role::NAME},
-            "permission_ids" => [],
-        ]);
-
-        $response->assertStatus(422)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->postJson($this->api, [
+                "name" => Role::first()->{Role::NAME},
+                "permission_ids" => [],
+            ])
+            ->assertStatus(422)
             ->assertJsonStructure(['name']);
 
 
         // Permission_ids not send
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->postJson($this->api, [
-            "name" => 'Role Test',
-        ]);
-
-        $response->assertStatus(422)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->postJson($this->api, [
+                "name" => 'Role Test',
+            ])
+            ->assertStatus(422)
             ->assertJsonStructure(['permission_ids']);
 
 
         // Permission_ids not in DB
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->postJson($this->api, [
-            "name" => 'Role Test',
-            "permission_ids" => [
-                Str::uuid(),
-            ],
-        ]);
-
-        $response->assertStatus(422)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->postJson($this->api, [
+                "name" => 'Role Test',
+                "permission_ids" => [
+                    Str::uuid(),
+                ],
+            ])
+            ->assertStatus(422)
             ->assertJsonStructure(['permission_ids.0']);
     }
 }

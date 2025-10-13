@@ -21,20 +21,14 @@ class RoleRepository
 
     public function create(array $data): Role
     {
-        $role = Role::create([
-            Role::NAME => $data[StoreRoleRequest::NAME]
-        ]);
-
-        return $this->syncPermissionIdsToRole($role, $data[StoreRoleRequest::PERMISSION_IDS]);
+        return Role::create($data);
     }
 
     public function update(Role $role, array $data): Role
     {
-        $role->update([
-            Role::NAME => $data[UpdateRoleRequest::NAME]
-        ]);
+        $role->update($data);
 
-        return $this->syncPermissionIdsToRole($role, $data[UpdateRoleRequest::PERMISSION_IDS]);
+        return $role;
     }
 
     public function delete(Role $role)

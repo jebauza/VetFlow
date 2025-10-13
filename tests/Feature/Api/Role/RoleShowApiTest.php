@@ -19,11 +19,9 @@ class RoleShowApiTest extends TestCase
         $token = $this->getAccessToken($user);
         $role = Role::inRandomOrder()->first();
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson(str_replace(':id', $role->{Role::ID}, $this->api));
-
-        $response->assertOk()
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson(str_replace(':id', $role->{Role::ID}, $this->api))
+            ->assertOk()
             ->assertJsonStructure([
                 'message',
                 'data',
@@ -32,11 +30,9 @@ class RoleShowApiTest extends TestCase
 
     public function test_show_with_invalid_token_401()
     {
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer invalid_token',
-        ])->getJson($this->api);
-
-        $response->assertStatus(401)
+        $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
+            ->getJson($this->api)
+            ->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthenticated.',
             ]);
@@ -47,11 +43,9 @@ class RoleShowApiTest extends TestCase
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson($this->api);
-
-        $response->assertStatus(422)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson($this->api)
+            ->assertStatus(422)
             ->assertJsonStructure(['role']);
     }
 
@@ -60,11 +54,9 @@ class RoleShowApiTest extends TestCase
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson(str_replace(':id', Str::uuid(), $this->api));
-
-        $response->assertStatus(404)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson(str_replace(':id', Str::uuid(), $this->api))
+            ->assertStatus(404)
             ->assertJsonStructure(['message']);
     }
 }

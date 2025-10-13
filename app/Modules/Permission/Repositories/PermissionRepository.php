@@ -15,4 +15,9 @@ class PermissionRepository
     {
         return Permission::findOrFail($id);
     }
+
+    public function getValidIds(array $ids)
+    {
+        return Permission::whereIn(Permission::ID, $ids)->pluck(Permission::ID);
+    }
 }

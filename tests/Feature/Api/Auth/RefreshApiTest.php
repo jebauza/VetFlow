@@ -11,16 +11,14 @@ class RefreshApiTest extends TestCase
 
     private $api = 'api/auth/refresh';
 
-    public function test_refresh()
+    public function test_refresh_200()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
-        $response = $this->withHeaders([
-            'Authorization' => "Bearer {$token}",
-        ])->getJson($this->api);
-
-        $response->assertStatus(200)
+        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+            ->getJson($this->api)
+            ->assertStatus(200)
             ->assertJsonStructure([
                 'access_token',
                 'token_type',
@@ -28,13 +26,11 @@ class RefreshApiTest extends TestCase
             ]);
     }
 
-    public function test_refresh_with_invalid_token()
+    public function test_refresh_with_invalid_token_401()
     {
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer invalid_token',
-        ])->getJson($this->api);
-
-        $response->assertStatus(401)
+        $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
+            ->getJson($this->api)
+            ->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthenticated.',
             ]);
