@@ -3,10 +3,12 @@
 namespace App\Modules\Role\Controllers\Api;
 
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Modules\Role\DTOs\RoleDTO;
 use Illuminate\Support\Facades\DB;
 use App\Common\Controllers\ApiController;
+use Illuminate\Support\Facades\Validator;
 use App\Modules\Role\Services\RoleService;
 use App\Modules\Role\Resources\RoleResource;
 use App\Modules\Role\Requests\StoreRoleRequest;
@@ -30,6 +32,7 @@ class RoleApiController extends ApiController
      * **Description**
      * - Retrieves a list of all roles within the system.
      *
+     *
      * **200 OK**
      * ```json
      *{"message":"Request processed successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
@@ -47,13 +50,22 @@ class RoleApiController extends ApiController
      *
      * @lrd:end
      *
+     * @LRDparam search string
+     *
      * @LRDresponses 200|401|500
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'search' => 'string',
+        ]);
+
+        if ($validator->fails())
+            return $this->sendError422($validator->errors()->toArray());
+
         return $this->sendResponse(
             null,
-            RoleResource::collection($this->service->getAllRoles())
+            RoleResource::collection($this->service->getRoles($request->input('search')))
         );
     }
 

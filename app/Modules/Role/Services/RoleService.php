@@ -15,9 +15,9 @@ class RoleService
         $this->repo = $repo;
     }
 
-    public function getAllRoles()
+    public function getRoles(string $search = null)
     {
-        return $this->repo->all();
+        return $this->repo->getBySearch($search);
     }
 
     public function getRoleById($id): Role

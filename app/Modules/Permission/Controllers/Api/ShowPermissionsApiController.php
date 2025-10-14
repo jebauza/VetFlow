@@ -40,7 +40,7 @@ class ShowPermissionsApiController extends ApiController
     {
         return $this->sendResponse(
             null,
-            PermissionResource::collection($service->getAllPermissions())
+            PermissionResource::collection($service->getPermissions())
         );
     }
 }

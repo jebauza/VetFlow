@@ -19,6 +19,13 @@ class PermissionService
         return $this->repo->all();
     }
 
+    public function getPermissions()
+    {
+        return $this->getAllPermissions()->whereNotIn(Permission::NAME, [
+            Permission::NAME_SUPERADMIN,
+        ]);
+    }
+
     public function getPermissionById($id): Permission
     {
         return $this->repo->find($id);

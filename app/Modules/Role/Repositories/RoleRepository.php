@@ -3,15 +3,22 @@
 namespace App\Modules\Role\Repositories;
 
 use App\Modules\Role\Models\Role;
+use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Permission\Models\Permission;
-use App\Modules\Role\Requests\StoreRoleRequest;
-use App\Modules\Role\Requests\UpdateRoleRequest;
 
 class RoleRepository
 {
-    public function all()
+    public function all(): Collection
     {
-        return Role::all();
+        return Role::orderBy(Role::NAME)
+            ->get();
+    }
+
+    public function getBySearch(?string $search): Collection
+    {
+        return Role::search($search)
+            ->orderBy(Role::NAME)
+            ->get();
     }
 
     public function find($id): Role

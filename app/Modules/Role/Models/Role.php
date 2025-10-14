@@ -2,9 +2,10 @@
 
 namespace App\Modules\Role\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\Permission\Models\Role as SpatieRole;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Spatie\Permission\Models\Role as SpatieRole;
 
 class Role extends SpatieRole
 {
@@ -23,4 +24,13 @@ class Role extends SpatieRole
     const VET_NAME = 'vet';
     const ASSISTANT_NAME = 'assistant';
     const RECEPTIONIST_NAME = 'receptionist';
+
+
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        return $query->when(
+            filled($search),
+            fn(Builder $q) => $q->where(self::NAME, 'LIKE', "%{$search}%")
+        );
+    }
 }

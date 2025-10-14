@@ -17,4 +17,7 @@ class Permission extends SpatiePermission
     const TABLE = 'permissions';
     const ID = 'id';
     const NAME = 'name';
+
+    const NAME_SUPERADMIN = 'superadmin';
+    const NAME_ADMIN = 'admin';
 }
