@@ -30,7 +30,7 @@ class Role extends SpatieRole
     {
         return $query->when(
             filled($search),
-            fn(Builder $q) => $q->where(self::NAME, 'LIKE', "%{$search}%")
+            fn(Builder $q) => $q->where(self::NAME, 'ILIKE', "%{$search}%")
         );
     }
 }

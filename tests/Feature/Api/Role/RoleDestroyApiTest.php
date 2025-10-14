@@ -22,9 +22,8 @@ class RoleDestroyApiTest extends TestCase
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
             ->deleteJson(str_replace(':id', $role->{Role::ID}, $this->api))
             ->assertOk()
-            ->assertJsonStructure([
-                'message',
-                'data',
+            ->assertJson([
+                'message' => __('Deleted successfully'),
             ]);
     }
 

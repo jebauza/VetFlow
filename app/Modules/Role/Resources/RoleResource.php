@@ -3,6 +3,7 @@
 namespace App\Modules\Role\Resources;
 
 use Illuminate\Http\Request;
+use App\Modules\Role\Models\Role;
 use App\Modules\Permission\Models\Permission;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,8 +19,8 @@ class RoleResource extends JsonResource
         parent::wrap(null);
 
         return [
-            'id' => $this->id,
-            'name' => $this->name,
+            'id' => $this->{Role::ID},
+            'name' => $this->{Role::NAME},
             'permissions' => $this->permissions->map(function ($permission) {
                 return [
                     'id' => $permission->{Permission::ID},

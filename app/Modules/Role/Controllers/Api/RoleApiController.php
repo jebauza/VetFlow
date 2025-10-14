@@ -244,7 +244,7 @@ class RoleApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Deleted successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
+     *{"message":"Deleted successfully"}
      * ```
      *
      * **401 Unauthorized**
@@ -285,8 +285,7 @@ class RoleApiController extends ApiController
             DB::commit();
 
             return $this->sendResponse(
-                __('Deleted successfully'),
-                (new RoleResource($role)),
+                __('Deleted successfully')
             );
         } catch (\Throwable $th) {
             DB::rollBack();
