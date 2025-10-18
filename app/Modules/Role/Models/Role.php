@@ -20,10 +20,10 @@ class Role extends SpatieRole
     const NAME = 'name';
 
 
-    const ADMIN_NAME = 'admin';
-    const VET_NAME = 'vet';
-    const ASSISTANT_NAME = 'assistant';
-    const RECEPTIONIST_NAME = 'receptionist';
+    const ADMIN_NAME = 'Admin';
+    const VET_NAME = 'Vet';
+    const ASSISTANT_NAME = 'Assistant';
+    const RECEPTIONIST_NAME = 'Receptionist';
 
 
     public function scopeSearch(Builder $query, ?string $search): Builder

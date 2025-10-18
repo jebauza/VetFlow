@@ -53,21 +53,21 @@ return [
 
     'roles' => [
         [
-            'name' => 'admin',
+            'name' => 'Admin',
             'permissions' => [
                 'admin'
             ],
         ],
         [
-            'name' => 'vet',
+            'name' => 'Vet',
             'permissions' => [],
         ],
         [
-            'name' => 'assistant',
+            'name' => 'Assistant',
             'permissions' => [],
         ],
         [
-            'name' => 'receptionist',
+            'name' => 'Receptionist',
             'permissions' => [],
         ],
     ],

@@ -23,7 +23,7 @@ class UserFakeSeeder extends Seeder
             Role::ASSISTANT_NAME,
             Role::RECEPTIONIST_NAME
         ])->get();
-        $permissions = Permission::whereIn(Permission::NAME, [])->get();
+        $permissions = Permission::whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN])->get();
         $rolesCount = $roles->count();
 
         $users = User::factory($rolesCount * $chunkUser)->create();
@@ -31,6 +31,12 @@ class UserFakeSeeder extends Seeder
         $users->chunk($chunkUser)->each(function ($chunkOfUsers, $index) use ($roles) {
             $chunkOfUsers->each(function (User $user) use ($roles, $index) {
                 $user->assignRole($roles[$index]);
+            });
+        });
+
+        $permissions->chunk($permissions->count() / $rolesCount)->each(function ($chunkOfPermissions, $index) use ($roles) {
+            $chunkOfPermissions->each(function (Permission $permission) use ($roles, $index) {
+                $permission->assignRole($roles[$index]);
             });
         });
 

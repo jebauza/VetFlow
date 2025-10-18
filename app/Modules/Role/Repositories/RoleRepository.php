@@ -17,7 +17,7 @@ class RoleRepository
     public function getBySearch(?string $search): Collection
     {
         return Role::search($search)
-            ->orderBy(Role::NAME)
+            ->orderByRaw('LOWER(' . Role::NAME . ') ASC')
             ->get();
     }
 

@@ -16,12 +16,9 @@ use App\Modules\Role\Requests\UpdateRoleRequest;
 
 class RoleApiController extends ApiController
 {
-    protected RoleService $service;
-
-    public function __construct(RoleService $service)
-    {
-        $this->service = $service;
-    }
+    public function __construct(
+        protected readonly RoleService $service
+    ) {}
 
     /**
      * @lrd:start
@@ -57,7 +54,7 @@ class RoleApiController extends ApiController
     public function index(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'search' => 'string',
+            'search' => 'nullable|string',
         ]);
 
         if ($validator->fails())
