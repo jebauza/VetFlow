@@ -23,8 +23,10 @@ jobs:
       # 3. Instalar dependencias de Composer
       - run: composer install --prefer-dist --no-interaction --optimize-autoloader
 
-      # 4. Generar key de Laravel
-      - run: php artisan key:generate
+      # 4. Crear archivo .env y generar key
+      - run: |
+          cp .env.example .env
+          php artisan key:generate
 
       # 5. Ejecutar PHPUnit
       - run: ./vendor/bin/phpunit --log-junit junit.xml
@@ -38,3 +40,4 @@ jobs:
         with:
           name: phpunit-report
           path: junit.xml
+
