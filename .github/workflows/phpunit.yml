@@ -1,0 +1,45 @@
+name: Run PHPUnit Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clonar el repositorio
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Configurar PHP
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: mbstring, bcmath, pdo, sqlite
+
+      # 3. Instalar Composer
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --optimize-autoloader
+
+      # 4. Configurar .env
+      - name: Copy .env
+        run: cp .env.example .env
+
+      # 5. Generar la llave de Laravel
+      - name: Generate App Key
+        run: php artisan key:generate
+
+      # 6. Ejecutar migraciones en SQLite
+      - name: Run Migrations
+        run: php artisan migrate --env=testing --force
+
+      # 7. Ejecutar PHPUnit
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --configuration phpunit.xml
