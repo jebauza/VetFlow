@@ -1,4 +1,4 @@
-name: Run PHPUnit Tests
+name: Laravel PHPUnit CI
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
 
     steps:
       # 1. Clonar el repositorio
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       # 2. Configurar PHP
@@ -25,22 +25,37 @@ jobs:
           php-version: 8.2
           extensions: mbstring, bcmath, pdo, sqlite
 
-      # 3. Instalar Composer
+      # 3. Cache de Composer
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      # 4. Instalar Composer
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --optimize-autoloader
 
-      # 4. Configurar .env
-      - name: Copy .env
-        run: cp .env.example .env
+      # 5. Configurar entorno Laravel
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=:memory:" >> .env
 
-      # 5. Generar la llave de Laravel
-      - name: Generate App Key
-        run: php artisan key:generate
-
-      # 6. Ejecutar migraciones en SQLite
-      - name: Run Migrations
+      # 6. Ejecutar migraciones
+      - name: Run migrations
         run: php artisan migrate --env=testing --force
 
-      # 7. Ejecutar PHPUnit
-      - name: Run PHPUnit
-        run: ./vendor/bin/phpunit --configuration phpunit.xml
+      # 7. Ejecutar PHPUnit y generar reportes
+      - name: Run PHPUnit tests
+        run: ./vendor/bin/phpunit --configuration phpunit.xml --log-junit junit.xml
+
+      # 8. Guardar resultados de tests como artefacto
+      - name: Upload PHPUnit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: phpunit-report
+          path: junit.xml
