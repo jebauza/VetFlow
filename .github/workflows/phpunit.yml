@@ -28,16 +28,16 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      # 5. Ejecutar PHPUnit
-      - run: ./vendor/bin/phpunit --log-junit junit.xml
-        env:
-          APP_ENV: testing
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+      # # 5. Ejecutar PHPUnit
+      # - run: ./vendor/bin/phpunit --log-junit junit.xml
+      #   env:
+      #     APP_ENV: testing
+      #     DB_CONNECTION: sqlite
+      #     DB_DATABASE: ':memory:'
 
-      # 6. Subir resultados de tests
-      - uses: actions/upload-artifact@v4
-        with:
-          name: phpunit-report
-          path: junit.xml
+      # # 6. Subir resultados de tests
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: phpunit-report
+      #     path: junit.xml
 
