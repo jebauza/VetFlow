@@ -2,12 +2,9 @@ name: Laravel PHPUnit CI
 
 on:
   push:
-    branches:
-      - develop
+    branches: [develop]
   pull_request:
-    branches:
-      - develop
-      - master
+    branches: [develop, master]
 
 jobs:
   phpunit:
@@ -15,47 +12,29 @@ jobs:
 
     steps:
       # 1. Clonar el repositorio
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       # 2. Configurar PHP con extensiones necesarias
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
           extensions: mbstring, bcmath, pdo, sqlite
 
-      # 3. Cache de Composer
-      - name: Cache Composer dependencies
-        uses: actions/cache@v3
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+      # 3. Instalar dependencias de Composer
+      - run: composer install --prefer-dist --no-interaction --optimize-autoloader
 
-      # 4. Instalar dependencias de Composer
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-interaction --optimize-autoloader
+      # 4. Generar key de Laravel
+      - run: php artisan key:generate
 
-      # 5. Configurar entorno Laravel
-      - name: Setup environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-          echo "DB_CONNECTION=sqlite" >> .env
-          echo "DB_DATABASE=:memory:" >> .env
+      # 5. Ejecutar PHPUnit
+      - run: ./vendor/bin/phpunit --log-junit junit.xml
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
 
-      # 6. Ejecutar migraciones
-      - name: Run migrations
-        run: php artisan migrate --env=testing --force
-
-      # 7. Ejecutar PHPUnit y generar reportes
-      - name: Run PHPUnit tests
-        run: ./vendor/bin/phpunit --configuration phpunit.xml --log-junit junit.xml
-
-      # 8. Subir resultados de tests como artefacto
-      - name: Upload PHPUnit report
-        uses: actions/upload-artifact@v4
+      # 6. Subir resultados de tests
+      - uses: actions/upload-artifact@v4
         with:
           name: phpunit-report
           path: junit.xml
