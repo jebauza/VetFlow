@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Api\Auth\Controllers\AuthController;
+use App\Modules\Auth\Controllers\Api\AuthController;
+use App\Modules\Role\Controllers\Api\RoleApiController;
+use App\Modules\Permission\Controllers\Api\ShowPermissionsApiController;
 
 Route::middleware('api')->group(function () {
 
@@ -14,5 +16,11 @@ Route::middleware('api')->group(function () {
             Route::get('/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
             Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
         });
+    });
+
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/permissions', ShowPermissionsApiController::class)->name('permissions.index');
+
+        Route::apiResource('roles', RoleApiController::class);
     });
 });

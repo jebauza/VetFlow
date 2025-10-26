@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Modules\Role\Requests;
+
+use App\Modules\Role\DTOs\RoleDTO;
+use App\Common\Requests\ApiRequest;
+use App\Modules\Permission\Repositories\PermissionRepository;
+
+class StoreRoleRequest extends ApiRequest
+{
+    public function rules(): array
+    {
+        return [
+            RoleDTO::NAME => 'required|string|unique:roles,name',
+            RoleDTO::PERMISSION_IDS => 'present|array',
+            RoleDTO::PERMISSION_IDS . '.*' => 'uuid',
+        ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if (empty($validator->errors()->all())) {
+                $this->checkPermissions($validator);
+            }
+        });
+    }
+
+    public function checkPermissions($validator): void
+    {
+        $permissionRepo = app(PermissionRepository::class);
+        $validIds = $permissionRepo->getValidIds($this->{RoleDTO::PERMISSION_IDS});
+        $notValidIds = collect($this->{RoleDTO::PERMISSION_IDS})->diff($validIds);
+
+        foreach ($notValidIds as $key => $id) {
+            $validator->errors()->add(
+                RoleDTO::PERMISSION_IDS . ".$key",
+                "The permission ($id) is not valid."
+            );
+        }
+    }
+}

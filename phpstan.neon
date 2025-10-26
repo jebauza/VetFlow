@@ -1,0 +1,17 @@
+# vendor/bin/phpstan analyse --memory-limit=512M
+
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+
+    level: 5
+
+    ignoreErrors:
+        # Ejemplo opcional:
+        # - '#Call to an undefined method Illuminate\\Support\\Collection::foo#'
+
+    tmpDir: storage/phpstan

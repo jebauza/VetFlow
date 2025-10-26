@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Api\Auth\Requests;
+namespace App\Modules\Auth\Requests;
 
 use App\Models\User;
-use App\Api\Common\Requests\ApiRequest;
+use App\Common\Requests\ApiRequest;
 
 class LoginRequest extends ApiRequest
 {

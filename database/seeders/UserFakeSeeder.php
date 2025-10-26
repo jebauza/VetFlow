@@ -1,0 +1,45 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use App\Modules\Role\Models\Role;
+use App\Modules\Permission\Models\Permission;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+class UserFakeSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $chunkUser = 10;
+
+        $roles = Role::whereIn(Role::NAME, [
+            Role::ADMIN_NAME,
+            Role::VET_NAME,
+            Role::ASSISTANT_NAME,
+            Role::RECEPTIONIST_NAME
+        ])->get();
+        $permissions = Permission::whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN])->get();
+        $rolesCount = $roles->count();
+
+        $users = User::factory($rolesCount * $chunkUser)->create();
+
+        $users->chunk($chunkUser)->each(function ($chunkOfUsers, $index) use ($roles) {
+            $chunkOfUsers->each(function (User $user) use ($roles, $index) {
+                $user->assignRole($roles[$index]);
+            });
+        });
+
+        $permissions->chunk($permissions->count() / $rolesCount)->each(function ($chunkOfPermissions, $index) use ($roles) {
+            $chunkOfPermissions->each(function (Permission $permission) use ($roles, $index) {
+                $permission->assignRole($roles[$index]);
+            });
+        });
+
+        $this->command->info(self::class . ' is finished');
+    }
+}

@@ -1,17 +1,20 @@
 <?php
 
-namespace App\Api\Auth\Controllers;
+namespace App\Modules\Auth\Controllers\Api;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Api\Auth\Requests\LoginRequest;
-use App\Api\Auth\Requests\RegisterRequest;
+use App\Common\Controllers\ApiController;
+use App\Modules\Auth\Requests\LoginRequest;
+use App\Modules\Permission\Models\Permission;
+use App\Modules\Auth\Requests\RegisterRequest;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     /**
      * Register a User.
@@ -40,7 +43,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 201|422|500
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -78,12 +81,12 @@ class AuthController extends Controller
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized"}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"message":"The email field must be a valid email address.","errors":{"email":["The email field must be a valid email address."]}}
+     *{"email":["The email field must be a valid email address."],"password":["The password field is required."]}
      * ```
      *
      * **500 Internal Server Error**
@@ -95,23 +98,21 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|422|500
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only([User::EMAIL, User::PASSWORD]);
 
         try {
             DB::beginTransaction();
-
             if (! $token = Auth::attempt($credentials)) {
-                return response()->json(['error' => 'Unauthorised'], 401);
+                return $this->sendError('Unauthorized', 401);
             }
-
             DB::commit();
 
             return $this->respondWithToken($token);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->sendError500($e->getMessage());
         }
     }
 
@@ -131,7 +132,7 @@ class AuthController extends Controller
      *
      * **200 OK**
      * ```json
-     *{"id":"9ff8ac68-6f9b-4c14-96a8-c4086f30fabf","email":"pepe@gmail.com","name":"Pepe Gonzalez"}
+     *{"id":"a00ea363-ee42-446d-8c9b-d9f0bfb96048","email":"alberto.considine@example.org","name":"Orlo Mitchell MD","surname":"Goldner","avatar":null,"permissions":[],"roles":["receptionist"]}
      * ```
      *
      * **401 Unauthorized**
@@ -148,9 +149,19 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
-        $data = auth()->user()->only(User::ID, User::EMAIL, User::NAME);
+        $user = auth()->user();
+        $data = $user->only(
+            User::ID,
+            User::EMAIL,
+            User::NAME,
+            User::SURNAME,
+            User::AVATAR,
+        );
+        $data['permissions'] = $user->getAllPermissions()->pluck(Permission::NAME);
+        $data['roles'] = $user->getRoleNames();
+
         return response()->json($data);
     }
 
@@ -187,7 +198,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         return $this->respondWithToken(auth()->refresh());
     }
@@ -200,6 +211,11 @@ class AuthController extends Controller
     /**
      *
      * @lrd:start
+     *
+     * **Set Global Headers**
+     * ```json
+     *{"Authorization": "Bearer <access_token>", "Content-Type": "application/json", "Accept": "application/json"}
+     * ```
      *
      * **200 OK**
      * ```json
@@ -220,7 +236,7 @@ class AuthController extends Controller
      *
      * @LRDresponses 200|401|500
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         auth()->logout();
 
@@ -234,7 +250,7 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function respondWithToken($token)
+    protected function respondWithToken($token): JsonResponse
     {
         $expires_in_minutes = auth()->factory()->getTTL();
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
@@ -12,9 +13,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasUuids, HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasUuids, HasRoles;
 
-    protected $primaryKey = 'id'; // Or your UUID column name
+    protected $primaryKey = self::ID; // Or your UUID column name
     public $incrementing = false;
     protected $keyType = 'string'; // UUIDs are strings
 
@@ -22,6 +23,10 @@ class User extends Authenticatable implements JWTSubject
     const EMAIL = 'email';
     const PASSWORD = 'password';
     const NAME = 'name';
+    const SURNAME = 'surname';
+    const AVATAR = 'avatar';
+    const EMAIL_VERIFIED_AT = 'email_verified_at';
+    const REMEMBER_TOKEN = 'remember_token';
 
     /**
      * The attributes that are mass assignable.
