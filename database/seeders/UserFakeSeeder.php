@@ -2,11 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use App\Modules\Role\Models\Role;
+use App\Modules\User\Models\User;
 use App\Modules\Permission\Models\Permission;
+use App\Modules\Role\Repositories\RoleRepository;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Modules\Permission\Repositories\PermissionRepository;
+use App\Modules\User\Repositories\UserRepository;
 
 class UserFakeSeeder extends Seeder
 {
@@ -15,28 +18,30 @@ class UserFakeSeeder extends Seeder
      */
     public function run(): void
     {
+        $permissionRepo = app(PermissionRepository::class);
+        $roleRepo = app(RoleRepository::class);
+        $userRepo = app(UserRepository::class);
         $chunkUser = 10;
 
-        $roles = Role::whereIn(Role::NAME, [
+        $roles = $roleRepo->whereIn(Role::NAME, [
             Role::ADMIN_NAME,
             Role::VET_NAME,
             Role::ASSISTANT_NAME,
             Role::RECEPTIONIST_NAME
-        ])->get();
-        $permissions = Permission::whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN])->get();
+        ]);
         $rolesCount = $roles->count();
-
+        $permissions = $permissionRepo->whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN]);
         $users = User::factory($rolesCount * $chunkUser)->create();
 
-        $users->chunk($chunkUser)->each(function ($chunkOfUsers, $index) use ($roles) {
-            $chunkOfUsers->each(function (User $user) use ($roles, $index) {
-                $user->assignRole($roles[$index]);
+        $users->chunk($chunkUser)->each(function ($chunkOfUsers, $index) use ($userRepo, $roles) {
+            $chunkOfUsers->each(function (User $user) use ($userRepo, $roles, $index) {
+                $userRepo->assignRoles($user, [$roles[$index]->{Role::ID}]);
             });
         });
 
-        $permissions->chunk($permissions->count() / $rolesCount)->each(function ($chunkOfPermissions, $index) use ($roles) {
-            $chunkOfPermissions->each(function (Permission $permission) use ($roles, $index) {
-                $permission->assignRole($roles[$index]);
+        $permissions->chunk($permissions->count() / $rolesCount)->each(function ($chunkOfPermissions, $index) use ($permissionRepo, $roles) {
+            $chunkOfPermissions->each(function (Permission $permission) use ($permissionRepo, $roles, $index) {
+                $permissionRepo->assignRoles($permission, [$roles[$index]->{Role::ID}]);
             });
         });
 

@@ -2,7 +2,7 @@
 
 namespace App\Modules\Auth\Controllers\Api;
 
-use App\Models\User;
+use App\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;

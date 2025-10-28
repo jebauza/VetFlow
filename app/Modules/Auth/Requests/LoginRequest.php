@@ -2,7 +2,7 @@
 
 namespace App\Modules\Auth\Requests;
 
-use App\Models\User;
+use App\Modules\User\Models\User;
 use App\Common\Requests\ApiRequest;
 
 class LoginRequest extends ApiRequest

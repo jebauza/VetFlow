@@ -3,7 +3,7 @@
 namespace Tests\Feature\Api\Auth;
 
 use Tests\TestCase;
-use App\Models\User;
+use App\Modules\User\Models\User;
 use App\Modules\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 

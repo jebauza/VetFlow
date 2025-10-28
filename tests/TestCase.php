@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use App\Models\User;
+use App\Modules\User\Models\User;
 use Database\Seeders\UserRolePermissionSeeder;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
