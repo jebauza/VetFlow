@@ -222,7 +222,7 @@ class RoleApiController extends ApiController
             return $this->sendResponse(
                 __('Updated successfully'),
                 (new RoleResource($role)),
-                201
+                200
             );
         } catch (\Throwable $th) {
             DB::rollBack();

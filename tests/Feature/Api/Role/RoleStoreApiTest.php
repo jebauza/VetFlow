@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Role;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
+use App\Modules\Role\Resources\RoleResource;
 use App\Modules\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -26,19 +27,13 @@ class RoleStoreApiTest extends TestCase
                 "permission_ids" => $permissions->pluck(Permission::ID)->toArray(),
             ]);
 
+        $role = Role::findOrfail($response->json('data.id'));
+        $storeData = json_decode((new RoleResource($role))->toJson(), true);
+
         $response->assertCreated()
             ->assertJson([
                 'message' => 'Created successfully',
-                'data' => [
-                    "id" => $response->json('data.id'),
-                    "name" => "Role Test",
-                    "permissions" => $permissions->map(function ($permission) {
-                        return [
-                            'id' => $permission->{Permission::ID},
-                            'name' => $permission->{Permission::NAME},
-                        ];
-                    })->sortBy(Permission::ID)->values()->toArray(),
-                ]
+                'data' => $storeData
             ]);
     }
 

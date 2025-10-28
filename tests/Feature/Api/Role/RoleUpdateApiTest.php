@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Role;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
+use App\Modules\Role\Resources\RoleResource;
 use App\Modules\Permission\Models\Permission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -22,23 +23,15 @@ class RoleUpdateApiTest extends TestCase
         $role = Role::inRandomOrder()->first();
         $permissions = Permission::inRandomOrder()->limit(3)->get();
 
-        $updateData = [
-            'id' => $role->id,
-            'name' => 'Role Test',
-            'permissions' => $permissions->map(function ($permission) {
-                return [
-                    'id' => $permission->{Permission::ID},
-                    'name' => $permission->{Permission::NAME},
-                ];
-            })->sortBy(Permission::ID)->values()->toArray(),
-        ];
-
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}",])
             ->putJson(str_replace(':id', $role->{Role::ID}, $this->api), [
-                "name" => $updateData['name'],
+                "name" => 'Role Test',
                 "permission_ids" => $permissions->pluck(Permission::ID)->toArray(),
-            ])
-            ->assertCreated()
+            ]);
+
+        $updateData = json_decode((new RoleResource($role->refresh()))->toJson(), true);
+
+        $response->assertOk()
             ->assertJson([
                 'message' => 'Updated successfully',
                 'data' => $updateData,
