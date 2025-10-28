@@ -2,7 +2,7 @@
 
 namespace App\Modules\Auth\Requests;
 
-use App\Modules\User\Models\User;
+use App\Modules\User\DTOs\UserDTO;
 use App\Common\Requests\ApiRequest;
 
 class RegisterRequest extends ApiRequest
@@ -16,9 +16,10 @@ class RegisterRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            User::NAME => 'required',
-            User::EMAIL => 'required|email|unique:users',
-            User::PASSWORD => 'required|min:8',
+            UserDTO::NAME => 'required',
+            UserDTO::SURNAME => 'required',
+            UserDTO::EMAIL => 'required|email|unique:users',
+            UserDTO::PASSWORD => 'required|min:8',
         ];
     }
 }

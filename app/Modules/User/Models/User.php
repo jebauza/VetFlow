@@ -36,9 +36,10 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        self::NAME,
+        self::SURNAME,
+        self::EMAIL,
+        self::PASSWORD,
     ];
 
     /**

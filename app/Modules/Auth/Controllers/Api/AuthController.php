@@ -2,20 +2,23 @@
 
 namespace App\Modules\Auth\Controllers\Api;
 
-use App\Modules\User\Models\User;
 use Illuminate\Http\Request;
+use App\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
+use App\Modules\User\DTOs\UserDTO;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Common\Controllers\ApiController;
+use App\Modules\Auth\Services\AuthService;
 use App\Modules\Auth\Requests\LoginRequest;
-use App\Modules\Permission\Models\Permission;
 use App\Modules\Auth\Requests\RegisterRequest;
 
 class AuthController extends ApiController
 {
+    public function __construct(
+        protected readonly AuthService $authService
+    ) {}
+
     /**
      * Register a User.
      *
@@ -45,14 +48,12 @@ class AuthController extends ApiController
      */
     public function register(RegisterRequest $request): JsonResponse
     {
+        $userDTO = UserDTO::fromRequest($request);
+
         try {
             DB::beginTransaction();
 
-            $user = new User;
-            $user->{User::NAME} = $request->{User::NAME};
-            $user->{User::EMAIL} = $request->{User::EMAIL};
-            $user->{User::PASSWORD} = Hash::make($request->{User::PASSWORD});
-            $user->save();
+            $user = $this->authService->register($userDTO);
 
             DB::commit();
 
@@ -100,11 +101,11 @@ class AuthController extends ApiController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only([User::EMAIL, User::PASSWORD]);
+        $credentials = $request->validated();
 
         try {
             DB::beginTransaction();
-            if (! $token = Auth::attempt($credentials)) {
+            if (!$token = Auth::attempt($credentials)) {
                 return $this->sendError('Unauthorized', 401);
             }
             DB::commit();
@@ -151,18 +152,7 @@ class AuthController extends ApiController
      */
     public function me(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        $data = $user->only(
-            User::ID,
-            User::EMAIL,
-            User::NAME,
-            User::SURNAME,
-            User::AVATAR,
-        );
-        $data['permissions'] = $user->getAllPermissions()->pluck(Permission::NAME);
-        $data['roles'] = $user->getRoleNames();
-
-        return response()->json($data);
+        return response()->json($this->authService->me());
     }
 
     /**
@@ -200,7 +190,7 @@ class AuthController extends ApiController
      */
     public function refresh(Request $request): JsonResponse
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(Auth::refresh());
     }
 
     /**
@@ -238,7 +228,7 @@ class AuthController extends ApiController
      */
     public function logout(Request $request): JsonResponse
     {
-        auth()->logout();
+        Auth::logout();
 
         return response()->json(['message' => 'Successfully logged out']);
     }
@@ -252,7 +242,7 @@ class AuthController extends ApiController
      */
     protected function respondWithToken($token): JsonResponse
     {
-        $expires_in_minutes = auth()->factory()->getTTL();
+        $expires_in_minutes = Auth::factory()->getTTL();
 
         return response()->json([
             'access_token' => $token,

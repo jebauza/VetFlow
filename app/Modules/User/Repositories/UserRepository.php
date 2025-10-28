@@ -4,11 +4,31 @@ namespace App\Modules\User\Repositories;
 
 use App\Modules\User\Models\User;
 use App\Common\Helpers\UuidHelper;
+use App\Modules\User\DTOs\UserDTO;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Collection;
 
 class UserRepository
 {
+    /**
+     * Create a new user in the database.
+     *
+     * @param string $name The name of the user.
+     * @param string $surname The surname of the user.
+     * @param string $email The email address of the user.
+     * @param string $password The plain text password for the user.
+     * @return User The newly created User model.
+     */
+    public function store(UserDTO $data): User
+    {
+        return User::create([
+            User::NAME => $data->{UserDTO::NAME},
+            User::SURNAME => $data->{UserDTO::SURNAME},
+            User::EMAIL => $data->{UserDTO::EMAIL},
+            User::PASSWORD => $data->{UserDTO::PASSWORD},
+        ]);
+    }
+
     /**
      * Retrieve all users from the database.
      *
@@ -132,5 +152,15 @@ class UserRepository
         $user->assignRole($roleIds);
 
         return $user->refresh();
+    }
+
+    public function getAllPermissions(User $user): Collection
+    {
+        return $user->getAllPermissions();
+    }
+
+    public function getRoles(User $user): Collection
+    {
+        return $user->roles;
     }
 }
