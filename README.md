@@ -1,66 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <a href="https://laravel.com" target="_blank">
+    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
+  </a>
 </p>
 
-## About Laravel
+# VetFlow - Backend API
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📖 Description
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**VetFlow** is an all-in-one web platform designed to modernize veterinary clinic management. It allows you to easily handle the full flow of care: from scheduling appointments and surgeries to managing vaccines, doctors’ schedules, and online payments.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+*   **Smart scheduling**: Easily organize appointments, vaccines, and surgeries.
+*   **Doctor management**: Control your team’s schedules and availability in real time.
+*   **Digital medical history**: Centralize information for every pet.
+*   **Integrated payments**: Process charges and simplify the client experience.
+*   **Reports and analytics**: Clear metrics for operational decisions.
 
-## Learning Laravel
+This repository contains the backend REST API for VetFlow, built with **Laravel 11**. It is designed with a modular architecture and features a secure JWT-based authentication system, as well as a comprehensive roles and permissions system.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## ✨ Key Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+*   **Modular Architecture**: The code is organized into modules (Users, Roles, Authentication) to facilitate maintenance and scalability.
+*   **JWT Authentication**: Secure and stateless authentication system using `php-open-source-saver/jwt-auth`.
+*   **Roles and Permissions**: Role-based access control (RBAC) implemented with the popular `spatie/laravel-permission` package.
+*   **API CRUDs**: Complete endpoints for managing Users and Roles.
+*   **Automated Documentation**: Automatic API documentation generation with `rakutentech/laravel-request-docs`.
+*   **Docker Environment**: Ready-to-use setup with Laravel Sail for fast and consistent local development.
+*   **Database**: Ready to work with PostgreSQL, leveraging its advanced features.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Tech Stack
 
-## Laravel Sponsors
+*   Laravel 11
+*   PostgreSQL
+*   Laravel Sail (Docker)
+*   JWT-Auth for Laravel
+*   Spatie Laravel Permission
+*   Laravel Request Docs
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Getting Started
 
-### Premium Partners
+Follow these steps to set up the project in your local environment.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Prerequisites
 
-## Contributing
+*   Docker
+*   Composer
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Installation
 
-## Code of Conduct
+1.  **Clone the repository:**
+    ```bash
+    git clone https://your-repository.git
+    cd project-name
+    ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2.  **Copy the environment file:**
+    ```bash
+    cp .env.example .env
+    ```
+    *Make sure to configure the environment variables in the `.env` file if necessary (although with Sail, the default database settings usually work out of the box).*
 
-## Security Vulnerabilities
+3.  **Start the containers with Sail:**
+    ```bash
+    ./vendor/bin/sail up -d
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+4.  **Install Composer dependencies:**
+    ```bash
+    ./vendor/bin/sail composer install
+    ```
 
-## License
+5.  **Generate the application key:**
+    ```bash
+    ./vendor/bin/sail artisan key:generate
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6.  **Generate the JWT secret:**
+    ```bash
+    ./vendor/bin/sail artisan jwt:secret
+    ```
+
+7.  **Run migrations and initial data load:**
+    ```bash
+    ./vendor/bin/sail artisan app:init --all
+    ```
+
+Done! The API should now be running at `http://localhost`.
+
+## 📚 API Documentation
+
+The API documentation is automatically generated and available at the following URL:
+
+http://localhost/request-docs
+
+From there, you can explore all endpoints, view validation rules, and test requests directly.
+
+## 🧪 Testing
+
+To run the automated test suite, use the following command:
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+## 📄 License
+
+This project is licensed under the MIT License. See the LICENSE.md file for details.

@@ -8,47 +8,40 @@ use App\Modules\Role\Repositories\RoleRepository;
 
 class RoleService
 {
-    protected RoleRepository $repo;
-
-    public function __construct(RoleRepository $repo)
-    {
-        $this->repo = $repo;
-    }
+    public function __construct(
+        protected readonly RoleRepository $roleRepo
+    ) {}
 
     public function getRoles(string $search = null)
     {
-        return $this->repo->getBySearch($search);
+        return $this->roleRepo->getBySearch($search);
     }
 
-    public function getRoleById($id): Role
+    public function getRoleById(string $id): Role
     {
-        return $this->repo->find($id);
+        return $this->roleRepo->findOrFail($id);
     }
 
-    public function createRole(RoleDTO $dto): Role
+    public function createRole(RoleDTO $roleDTO): Role
     {
-        $role = $this->repo->create([
-            Role::NAME => $dto->{RoleDTO::NAME},
-        ]);
+        $role = $this->roleRepo->create($roleDTO->toArray(true));
 
-        $role->syncPermissions($dto->{RoleDTO::PERMISSION_IDS});
+        $role->syncPermissions($roleDTO->{RoleDTO::PERMISSION_IDS});
 
-        return $role->load('permissions');
+        return $this->roleRepo->load($role, ['permissions']);
     }
 
-    public function updateRole(Role $role, RoleDTO $dto): Role
+    public function updateRole(string $id, RoleDTO $roleDTO): Role
     {
-        $role = $this->repo->update($role, [
-            Role::NAME => $dto->{RoleDTO::NAME},
-        ]);
+        $role = $this->roleRepo->update($id, $roleDTO->toArray(true));
 
-        $role->syncPermissions($dto->{RoleDTO::PERMISSION_IDS});
+        $role->syncPermissions($roleDTO->{RoleDTO::PERMISSION_IDS});
 
-        return $role->load('permissions');
+        return $this->roleRepo->load($role, ['permissions']);
     }
 
-    public function deleteRole(Role $role)
+    public function deleteRole(string $id)
     {
-        $this->repo->delete($role);
+        $this->roleRepo->delete($id);
     }
 }

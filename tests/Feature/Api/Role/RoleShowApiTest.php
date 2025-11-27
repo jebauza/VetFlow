@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Role;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
+use App\Modules\Role\Resources\RoleResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class RoleShowApiTest extends TestCase
@@ -18,13 +19,14 @@ class RoleShowApiTest extends TestCase
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
         $role = Role::inRandomOrder()->first();
+        $showData = json_decode((new RoleResource($role))->toJson(), true);
 
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
             ->getJson(str_replace(':id', $role->{Role::ID}, $this->api))
             ->assertOk()
-            ->assertJsonStructure([
-                'message',
-                'data',
+            ->assertJson([
+                'message' => 'Request processed successfully',
+                'data' => $showData
             ]);
     }
 
@@ -49,13 +51,13 @@ class RoleShowApiTest extends TestCase
             ->assertJsonStructure(['role']);
     }
 
-    public function test_show_role_id_not_found_404()
+    public function test_show_id_not_found_404()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
 
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->getJson(str_replace(':id', Str::uuid(), $this->api))
+            ->getJson(str_replace(':id', Str::uuid()->toString(), $this->api))
             ->assertStatus(404)
             ->assertJsonStructure(['message']);
     }

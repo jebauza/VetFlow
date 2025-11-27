@@ -3,17 +3,33 @@
 namespace App\Modules\Role\Repositories;
 
 use App\Modules\Role\Models\Role;
+use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
-use App\Modules\Permission\Models\Permission;
 
-class RoleRepository
+class RoleRepository extends BaseRepository
 {
+    public function __construct(Role $model)
+    {
+        parent::__construct($model);
+    }
+
+    /**
+     * Get all roles ordered by name.
+     *
+     * @return Collection<int, Role>
+     */
     public function all(): Collection
     {
         return Role::orderBy(Role::NAME)
             ->get();
     }
 
+    /**
+     * Get roles by a search query, ordered alphabetically by name.
+     *
+     * @param string|null $search The search string.
+     * @return Collection<int, Role>
+     */
     public function getBySearch(?string $search): Collection
     {
         return Role::search($search)
@@ -21,33 +37,38 @@ class RoleRepository
             ->get();
     }
 
-    public function find($id): Role
-    {
-        return Role::findOrFail($id);
-    }
-
+    /**
+     * Create a new role.
+     *
+     * @param array<string, mixed> $data The data for the new role.
+     * @return Role
+     */
     public function create(array $data): Role
     {
         return Role::create($data);
     }
 
-    public function update(Role $role, array $data): Role
+    /**
+     * Delete all roles.
+     *
+     * @return void
+     */
+    public function deleteAll(): void
     {
-        $role->update($data);
-
-        return $role;
+        Role::query()->delete();
     }
 
-    public function delete(Role $role)
+    /**
+     * Sync permissions to a role.
+     *
+     * @param Role $role The role instance to sync permissions to.
+     * @param array<int, int> $permissionIds An array of permission IDs.
+     * @return Role
+     */
+    public function syncPermissionIdsToRole(Role $role, array $permissionIds): Role
     {
-        $role->delete();
-    }
+        $role->syncPermissions($permissionIds);
 
-    private function syncPermissionIdsToRole(Role $role, array $permissionIds): Role
-    {
-        $permissions = Permission::whereIn(Permission::ID, $permissionIds)->get();
-        $role->syncPermissions($permissions);
-
-        return $role;
+        return $role->refresh();
     }
 }

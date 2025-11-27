@@ -4,6 +4,7 @@ namespace App\Modules\Role\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Modules\Role\Models\Role;
 use Illuminate\Http\JsonResponse;
 use App\Modules\Role\DTOs\RoleDTO;
 use Illuminate\Support\Facades\DB;
@@ -77,7 +78,7 @@ class RoleApiController extends ApiController
      *
      * **201 Created**
      * ```json
-     *{"message":"Created successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
+     *{"message":"Created successfully","data":{"id":"a03998e1-31ea-47d8-baf9-4832176a18d1","name":"Vet 2","date":"2025-10-28 22:59:44","permissions":[{"id":"a0398a9a-7008-4e4f-bf93-cee4ef193e0e","name":"pet.profile"},{"id":"a0398a9a-7161-4b5c-b32f-4c4382a2e30e","name":"staff.register"}]}}
      * ```
      *
      * **401 Unauthorized**
@@ -101,11 +102,11 @@ class RoleApiController extends ApiController
      */
     public function store(StoreRoleRequest $request): JsonResponse
     {
-        $dto = new RoleDTO(...$request->validated());
+        $roleDTO = new RoleDTO(...$request->validated());
 
         try {
             DB::beginTransaction();
-            $role = $this->service->createRole($dto);
+            $role = $this->service->createRole($roleDTO);
             DB::commit();
 
             return $this->sendResponse(
@@ -182,7 +183,7 @@ class RoleApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Updated successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
+     *{"message":"Updated successfully","data":{"id":"a0398a9a-8d60-477c-92c1-e8b0028529ab","name":"rol test2","date":"2025-10-28 22:19:49","permissions":[{"id":"a0398a9a-6a37-4c20-bf1f-060fc3a4c674","name":"veterinary.profile"},{"id":"a0398a9a-6b35-4c5d-af8b-d2c7df64ee8a","name":"pet.register"}]}}
      * ```
      *
      * **401 Unauthorized**
@@ -211,18 +212,18 @@ class RoleApiController extends ApiController
      */
     public function update(UpdateRoleRequest $request, string $id)
     {
-        $dto = new RoleDTO(...$request->validated());
+        $roleDTO = new RoleDTO(...$request->validated());
         $role = $this->service->getRoleById($id);
 
         try {
             DB::beginTransaction();
-            $role = $this->service->updateRole($role, $dto);
+            $role = $this->service->updateRole($role->{Role::ID}, $roleDTO);
             DB::commit();
 
             return $this->sendResponse(
                 __('Updated successfully'),
                 (new RoleResource($role)),
-                201
+                200
             );
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -278,7 +279,7 @@ class RoleApiController extends ApiController
 
         try {
             DB::beginTransaction();
-            $this->service->deleteRole($role);
+            $this->service->deleteRole($role->{Role::ID});
             DB::commit();
 
             return $this->sendResponse(

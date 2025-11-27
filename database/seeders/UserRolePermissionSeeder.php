@@ -2,13 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use App\Modules\Role\Models\Role;
-use App\Common\Helpers\UuidHelper;
-use Illuminate\Support\Facades\Hash;
+use App\Modules\User\Models\User;
+use App\Modules\User\Repositories\UserRepository;
 use Spatie\Permission\PermissionRegistrar;
 use App\Modules\Permission\Models\Permission;
+use App\Modules\Role\Repositories\RoleRepository;
+use App\Modules\Permission\Repositories\PermissionRepository;
 
 class UserRolePermissionSeeder extends Seeder
 {
@@ -17,62 +18,65 @@ class UserRolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $configPermissions = config('vetflow.permissions');
-        $configRoles = config('vetflow.roles');
-        $configUsers = config('vetflow.users');
-
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $permissionRepo = app(PermissionRepository::class);
 
         // Create permissions
-        Permission::query()->delete();
+        $configPermissions = config('vetflow.permissions');
+        $permissionRepo = app(PermissionRepository::class);
+        $permissionRepo->deleteAll();
         foreach ($configPermissions as $permission) {
-            Permission::create(['name' => $permission]);
+            $permissionRepo->create([Permission::NAME => $permission]);
         }
-        $allPermissions = Permission::get();
+        $allPermissions = $permissionRepo->all();
+
 
         // Create roles
-        Role::query()->delete();
+        $configRoles = config('vetflow.roles');
+        $roleRepo = app(RoleRepository::class);
+        $roleRepo->deleteAll();
         foreach ($configRoles as $role) {
-            $mRole = Role::create(['name' => $role['name']]);
+            $mRole = $roleRepo->create([Role::NAME => $role['name']]);
 
             if (!empty($role['permissions']) && $mRole) {
-                $permissions = $allPermissions->whereIn(Permission::NAME, $role['permissions']);
-                $mRole->syncPermissions($permissions);
+                $permissionIds = $allPermissions->whereIn(Permission::NAME, $role['permissions'])
+                    ->pluck(Permission::ID)
+                    ->toArray();
+                $roleRepo->syncPermissionIdsToRole($mRole, $permissionIds);
             }
         }
-        $allRoles = Role::get();
+        $allRoles = $roleRepo->all();
+
 
         // Create users
-        User::whereNotIn(User::EMAIL, array_column($configUsers, 'email'))->delete();
+        $configUsers = config('vetflow.users');
+        $userRepository = app(UserRepository::class);
+        $userRepository->deleteAllExcept(User::EMAIL, array_column($configUsers, 'email'));
         foreach ($configUsers as $user) {
             if (!empty($user['email'])) {
-                User::upsert(
-                    [
-                        User::ID => UuidHelper::newBinaryUuid(),
-                        User::NAME => $user['name'],
-                        User::SURNAME => $user['name'],
-                        User::EMAIL => $user['email'],
-                        User::EMAIL_VERIFIED_AT => now(),
-                        User::PASSWORD => Hash::make($user['password']),
-                    ],
-                    User::EMAIL,
-                    [
-                        User::NAME,
-                        User::PASSWORD,
-                    ]
+                $userRepository->upsert(
+                    $user['name'],
+                    $user['name'],
+                    $user['email'],
+                    $user['password'],
+                    isset($user['superadmin']) ? $user['superadmin'] : false
                 );
 
-                $mUser = User::firstWhere(User::EMAIL, $user['email']);
+                $mUser = $userRepository->findOneBy(User::EMAIL, $user['email']);
 
                 if (!empty($user['permissions']) && $mUser) {
-                    $permissions = $allPermissions->whereIn(Permission::NAME, $user['permissions']);
-                    $mUser->syncPermissions($permissions);
+                    $permissionIds = $allPermissions->whereIn(Permission::NAME, $user['permissions'])
+                        ->pluck(Permission::ID)
+                        ->toArray();
+                    $userRepository->syncPermissionIdsToUser($mUser, $permissionIds);
                 }
 
                 if (!empty($user['roles']) && $mUser) {
-                    $roles = $allRoles->whereIn(Role::NAME, $user['roles']);
-                    $mUser->syncRoles($roles);
+                    $roleIds = $allRoles->whereIn(Role::NAME, $user['roles'])
+                        ->pluck(Role::ID)
+                        ->toArray();
+                    $userRepository->syncRoleIdsToUser($mUser, $roleIds);
                 }
             }
         }

@@ -2,7 +2,6 @@
 
 return [
     'permissions' => [
-        'superadmin',
         'admin',
 
         'role.register',
@@ -78,9 +77,7 @@ return [
             'email' => env('USER_SUPERADMIN_EMAIL', null),
             'name' => env('USER_SUPERADMIN_EMAIL', null),
             'password' => env('USER_SUPERADMIN_PASSWORD', null),
-            'permissions' => [
-                'superadmin',
-            ],
+            'superadmin' => true,
         ],
 
         // ADMIN
@@ -90,7 +87,7 @@ return [
             'password' => 'K@pT5u#w',
             'permissions' => [],
             'roles' => [
-                'admin',
+                'Admin',
             ],
         ],
     ],

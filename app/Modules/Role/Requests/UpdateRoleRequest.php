@@ -5,6 +5,7 @@ namespace App\Modules\Role\Requests;
 use Illuminate\Support\Str;
 use App\Modules\Role\DTOs\RoleDTO;
 use App\Common\Requests\ApiRequest;
+use App\Modules\Permission\Models\Permission;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Modules\Permission\Repositories\PermissionRepository;
 
@@ -41,7 +42,7 @@ class UpdateRoleRequest extends ApiRequest
     public function checkPermissions($validator): void
     {
         $permissionRepo = app(PermissionRepository::class);
-        $validIds = $permissionRepo->getValidIds($this->{RoleDTO::PERMISSION_IDS});
+        $validIds = $permissionRepo->whereIn(Permission::ID, $this->{RoleDTO::PERMISSION_IDS})->pluck(Permission::ID);
         $notValidIds = collect($this->{RoleDTO::PERMISSION_IDS})->diff($validIds);
 
         foreach ($notValidIds as $key => $id) {

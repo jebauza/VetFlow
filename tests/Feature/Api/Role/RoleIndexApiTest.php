@@ -18,7 +18,7 @@ class RoleIndexApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->roleRepo = new RoleRepository();
+        $this->roleRepo = new RoleRepository(new Role);
     }
 
     public function test_index_200()

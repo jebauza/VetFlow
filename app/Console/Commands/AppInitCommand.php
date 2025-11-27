@@ -36,6 +36,10 @@ class AppInitCommand extends Command
             $this->initPostgresDatabase();
         }
 
+        if (!is_link(public_path('storage'))) {
+            $this->call('storage:link');
+        }
+
         return Command::SUCCESS;
     }
 

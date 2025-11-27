@@ -2,20 +2,23 @@
 
 namespace App\Modules\Auth\Controllers\Api;
 
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Modules\User\DTOs\CreateUserDTO;
 use App\Common\Controllers\ApiController;
+use App\Modules\Auth\Services\AuthService;
 use App\Modules\Auth\Requests\LoginRequest;
-use App\Modules\Permission\Models\Permission;
 use App\Modules\Auth\Requests\RegisterRequest;
 
 class AuthController extends ApiController
 {
+    public function __construct(
+        protected readonly AuthService $authService
+    ) {}
+
     /**
      * Register a User.
      *
@@ -26,7 +29,7 @@ class AuthController extends ApiController
      *
      * **201 Created**
      * ```json
-     *{"id":"9ff8ac68-6f9b-4c14-96a8-c4086f30fabf","email":"pepe@gmail.com","name":"Pepe Gonzalez"}
+     *{"id":"a0431d02-953e-442a-9b42-5ec1be5d8c56","email":"jebauza1989@gmail.com","name":"jorge Ernesto","surname":"Bauza"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -45,18 +48,21 @@ class AuthController extends ApiController
      */
     public function register(RegisterRequest $request): JsonResponse
     {
+        $createUserDTO = CreateUserDTO::fromRequest($request);
+
         try {
             DB::beginTransaction();
 
-            $user = new User;
-            $user->{User::NAME} = $request->{User::NAME};
-            $user->{User::EMAIL} = $request->{User::EMAIL};
-            $user->{User::PASSWORD} = Hash::make($request->{User::PASSWORD});
-            $user->save();
+            $user = $this->authService->register($createUserDTO);
 
             DB::commit();
 
-            return response()->json($user->only(User::ID, User::EMAIL, User::NAME), 201);
+            return response()->json($user->only(
+                User::ID,
+                User::EMAIL,
+                User::NAME,
+                User::SURNAME
+            ), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
@@ -100,11 +106,11 @@ class AuthController extends ApiController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only([User::EMAIL, User::PASSWORD]);
+        $credentials = $request->validated();
 
         try {
             DB::beginTransaction();
-            if (! $token = Auth::attempt($credentials)) {
+            if (!$token = Auth::attempt($credentials)) {
                 return $this->sendError('Unauthorized', 401);
             }
             DB::commit();
@@ -151,18 +157,7 @@ class AuthController extends ApiController
      */
     public function me(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        $data = $user->only(
-            User::ID,
-            User::EMAIL,
-            User::NAME,
-            User::SURNAME,
-            User::AVATAR,
-        );
-        $data['permissions'] = $user->getAllPermissions()->pluck(Permission::NAME);
-        $data['roles'] = $user->getRoleNames();
-
-        return response()->json($data);
+        return response()->json($this->authService->me());
     }
 
     /**
@@ -200,7 +195,7 @@ class AuthController extends ApiController
      */
     public function refresh(Request $request): JsonResponse
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(Auth::refresh());
     }
 
     /**
@@ -238,7 +233,7 @@ class AuthController extends ApiController
      */
     public function logout(Request $request): JsonResponse
     {
-        auth()->logout();
+        Auth::logout();
 
         return response()->json(['message' => 'Successfully logged out']);
     }
@@ -252,7 +247,7 @@ class AuthController extends ApiController
      */
     protected function respondWithToken($token): JsonResponse
     {
-        $expires_in_minutes = auth()->factory()->getTTL();
+        $expires_in_minutes = Auth::factory()->getTTL();
 
         return response()->json([
             'access_token' => $token,
