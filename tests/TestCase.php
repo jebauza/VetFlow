@@ -9,6 +9,9 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected User $superAdmin;
+    protected string $AccessToken;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,12 +31,14 @@ abstract class TestCase extends BaseTestCase
 
     protected function superAdmin(): User
     {
-        return User::firstWhere(User::EMAIL, $this->superAdminEmail());
+        $this->superAdmin ??= User::firstWhere(User::EMAIL, $this->superAdminEmail());
+        return $this->superAdmin;
     }
 
     protected function getAccessToken(User $user): string
     {
-        return JWTAuth::fromUser($user);
+        $this->AccessToken ??= JWTAuth::fromUser($user);
+        return $this->AccessToken;
     }
 
     /**

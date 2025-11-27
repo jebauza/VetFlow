@@ -91,7 +91,7 @@ class RoleStoreApiTest extends TestCase
             ->postJson($this->api, [
                 "name" => 'Role Test',
                 "permission_ids" => [
-                    Str::uuid(),
+                    Str::uuid()->toString(),
                 ],
             ])
             ->assertStatus(422)

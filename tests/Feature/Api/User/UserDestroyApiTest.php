@@ -1,46 +1,52 @@
 <?php
 
-namespace Tests\Feature\Api\Role;
+namespace Tests\Feature\Api\User;
 
 use Tests\TestCase;
 use Illuminate\Support\Str;
-use App\Modules\Role\Models\Role;
-use App\Modules\Role\Resources\RoleResource;
+use App\Modules\User\Models\User;
+use App\Modules\User\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class RoleShowApiTest extends TestCase
+class UserDestroyApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private $api = 'api/roles/:id';
+    private $api = 'api/users/:id';
 
-    public function test_show_200()
+    protected UserRepository $userRepo;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->userRepo = new UserRepository(new User);
+    }
+
+    public function test_destroy_200()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
-        $role = Role::inRandomOrder()->first();
-        $showData = json_decode((new RoleResource($role))->toJson(), true);
+        $userId = $this->userRepo->firstRandom()->{User::ID};
 
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->getJson(str_replace(':id', $role->{Role::ID}, $this->api))
+            ->deleteJson(str_replace(':id', $userId, $this->api))
             ->assertOk()
             ->assertJson([
-                'message' => 'Request processed successfully',
-                'data' => $showData
+                'message' => __('Deleted successfully'),
             ]);
     }
 
-    public function test_show_with_invalid_token_401()
+    public function test_destroy_with_invalid_token_401()
     {
         $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
-            ->getJson($this->api)
+            ->deleteJson($this->api)
             ->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthenticated.',
             ]);
     }
 
-    public function test_show_validation_422()
+    public function test_destroy_validation_422()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
@@ -48,10 +54,10 @@ class RoleShowApiTest extends TestCase
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
             ->getJson($this->api)
             ->assertStatus(422)
-            ->assertJsonStructure(['role']);
+            ->assertJsonStructure(['user']);
     }
 
-    public function test_show_id_not_found_404()
+    public function test_destroy_user_id_not_found_404()
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);

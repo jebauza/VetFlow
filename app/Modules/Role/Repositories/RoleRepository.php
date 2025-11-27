@@ -3,18 +3,15 @@
 namespace App\Modules\Role\Repositories;
 
 use App\Modules\Role\Models\Role;
+use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class RoleRepository
+class RoleRepository extends BaseRepository
 {
-    /**
-     * Create a new RoleRepository instance.
-     *
-     * @param  // protected readonly PermissionRepository $permissionRepo
-     */
-    public function __construct(
-        // protected readonly PermissionRepository $permissionRepo
-    ) {}
+    public function __construct(Role $model)
+    {
+        parent::__construct($model);
+    }
 
     /**
      * Get all roles ordered by name.
@@ -41,17 +38,6 @@ class RoleRepository
     }
 
     /**
-     * Find a role by its ID.
-     *
-     * @param int $id The ID of the role.
-     * @return Role
-     */
-    public function find($id): Role
-    {
-        return Role::findOrFail($id);
-    }
-
-    /**
      * Create a new role.
      *
      * @param array<string, mixed> $data The data for the new role.
@@ -60,31 +46,6 @@ class RoleRepository
     public function create(array $data): Role
     {
         return Role::create($data);
-    }
-
-    /**
-     * Update an existing role.
-     *
-     * @param Role $role The role instance to update.
-     * @param array<string, mixed> $data The data to update the role with.
-     * @return Role
-     */
-    public function update(Role $role, array $data): Role
-    {
-        $role->update($data);
-
-        return $role;
-    }
-
-    /**
-     * Delete a role.
-     *
-     * @param Role $role The role instance to delete.
-     * @return void
-     */
-    public function delete(Role $role): void
-    {
-        $role->delete();
     }
 
     /**
@@ -109,29 +70,5 @@ class RoleRepository
         $role->syncPermissions($permissionIds);
 
         return $role->refresh();
-    }
-
-    /**
-     * Get roles where a given column's value is in a given array.
-     *
-     * @param string $column The column name.
-     * @param array<int, mixed> $values The array of values to check against.
-     * @return Collection<int, Role>
-     */
-    public function whereIn(string $column, array $values): Collection
-    {
-        return Role::whereIn($column, $values)->get();
-    }
-
-    /**
-     * Get roles where a given column's value is not in a given array.
-     *
-     * @param string $column The column name.
-     * @param array<int, mixed> $values The array of values to check against.
-     * @return Collection<int, Role>
-     */
-    public function whereNotIn(string $column, array $values): Collection
-    {
-        return Role::whereNotIn($column, $values)->get();
     }
 }

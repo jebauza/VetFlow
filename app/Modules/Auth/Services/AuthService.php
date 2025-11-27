@@ -4,9 +4,9 @@ namespace App\Modules\Auth\Services;
 
 use App\Modules\Role\Models\Role;
 use App\Modules\User\Models\User;
-use App\Modules\User\DTOs\UserDTO;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\Permission\Models\Permission;
 use App\Modules\User\Repositories\UserRepository;
 
@@ -16,10 +16,10 @@ class AuthService
         protected readonly UserRepository $userRepo
     ) {}
 
-    public function register(UserDTO $userDTO): User
+    public function register(CreateUserDTO $createUserDTO): User
     {
-        $userDTO->{UserDTO::PASSWORD} = Hash::make($userDTO->{UserDTO::PASSWORD});
-        $user = $this->userRepo->store($userDTO);
+        $createUserDTO->{CreateUserDTO::PASSWORD} = Hash::make($createUserDTO->{CreateUserDTO::PASSWORD});
+        $user = $this->userRepo->create($createUserDTO->toArray());
 
         return $user;
     }

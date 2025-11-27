@@ -62,7 +62,7 @@ class RoleUpdateApiTest extends TestCase
 
         // Data not valid
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->putJson(str_replace(':id', Str::uuid(), $this->api), [
+            ->putJson(str_replace(':id', Str::uuid()->toString(), $this->api), [
                 "name" => "",
                 "permission_ids" => [
                     'not-a-uuid',
@@ -74,7 +74,7 @@ class RoleUpdateApiTest extends TestCase
 
         // Name already exists DB
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->putJson(str_replace(':id', Str::uuid(), $this->api), [
+            ->putJson(str_replace(':id', Str::uuid()->toString(), $this->api), [
                 "name" => Role::first()->{Role::NAME},
                 "permission_ids" => [],
             ])
@@ -84,7 +84,7 @@ class RoleUpdateApiTest extends TestCase
 
         // Permission_ids not send
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->putJson(str_replace(':id', Str::uuid(), $this->api), [
+            ->putJson(str_replace(':id', Str::uuid()->toString(), $this->api), [
                 "name" => 'Role Test',
             ])
             ->assertStatus(422)
@@ -93,10 +93,10 @@ class RoleUpdateApiTest extends TestCase
 
         // Permission_ids not in DB
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->putJson(str_replace(':id', Str::uuid(), $this->api), [
+            ->putJson(str_replace(':id', Str::uuid()->toString(), $this->api), [
                 "name" => 'Role Test',
                 "permission_ids" => [
-                    Str::uuid(),
+                    Str::uuid()->toString(),
                 ],
             ])->assertStatus(422)
             ->assertJsonStructure(['permission_ids.0']);
@@ -110,7 +110,7 @@ class RoleUpdateApiTest extends TestCase
         $permissions = Permission::inRandomOrder()->limit(3)->get();
 
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->putJson(str_replace(':id', Str::uuid(), $this->api), [
+            ->putJson(str_replace(':id', Str::uuid()->toString(), $this->api), [
                 "name" => 'Role Test',
                 "permission_ids" => $permissions->pluck(Permission::ID)->toArray(),
             ])

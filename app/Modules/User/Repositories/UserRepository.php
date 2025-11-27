@@ -4,63 +4,69 @@ namespace App\Modules\User\Repositories;
 
 use App\Modules\User\Models\User;
 use App\Common\Helpers\UuidHelper;
-use App\Modules\User\DTOs\UserDTO;
 use Illuminate\Support\Facades\Hash;
+use App\Modules\User\DTOs\UpdateUserDTO;
+use Illuminate\Database\Eloquent\Builder;
+use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class UserRepository
+class UserRepository extends BaseRepository
 {
-    /**
-     * Create a new user in the database.
-     *
-     * @param string $name The name of the user.
-     * @param string $surname The surname of the user.
-     * @param string $email The email address of the user.
-     * @param string $password The plain text password for the user.
-     * @return User The newly created User model.
-     */
-    public function store(UserDTO $data): User
+    public function __construct(User $model)
     {
-        return User::create([
-            User::NAME => $data->{UserDTO::NAME},
-            User::SURNAME => $data->{UserDTO::SURNAME},
-            User::EMAIL => $data->{UserDTO::EMAIL},
-            User::PASSWORD => $data->{UserDTO::PASSWORD},
-        ]);
+        parent::__construct($model);
     }
 
-    /**
-     * Retrieve all users from the database.
-     *
-     * @return Collection A collection of User models.
-     */
-    public function all(): Collection
+    public function findOrFail(string $id, bool $withRelations = false): User
     {
-        return User::all();
+        return User::when($withRelations, function (Builder $q) {
+            $q->with([
+                'permissions:id,name',
+                'roles.permissions:id,name'
+            ]);
+        })->findOrFail($id);
     }
 
-    /**
-     * Find a user by their ID.
-     *
-     * @param mixed $id The ID of the user to find.
-     * @return User The found User model.
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no user is found.
-     */
-    public function find($id): User
-    {
-        return User::findOrFail($id);
-    }
-
-    /**
-     * Find a single user by a specific column and value.
-     *
-     * @param string $column The column name to search by (e.g., 'email').
-     * @param string $value The value to match in the specified column.
-     * @return User The found User model.
-     */
     public function findOneBy(string $column, string $value): User
     {
         return User::firstWhere($column, $value);
+    }
+
+    public function getBySearch(?string $search, bool $withRelations = false): Collection
+    {
+        return User::withoutSuperAdmin()
+            ->when(filled($search), function (Builder $q) use ($search) {
+                $q->where(User::NAME, 'ILIKE', "%{$search}%")
+                    ->orWhere(User::SURNAME, 'ILIKE', "%{$search}%")
+                    ->orWhere(User::EMAIL, 'ILIKE', "%{$search}%")
+                    ->orWhere(User::N_DOCUMENT, 'ILIKE', "%{$search}%");
+            })
+            ->when($withRelations, function (Builder $q) {
+                $q->with([
+                    'permissions:id,name',
+                    'roles.permissions:id,name'
+                ]);
+            })
+            ->orderByRaw('LOWER( CONCAT(' . User::NAME . ',' . User::SURNAME . ') ) ASC')
+            ->get();
+    }
+
+    public function update(string $id, array $updateUserDTO): User
+    {
+        $user = User::updateOrCreate(
+            [
+                User::ID => $id
+            ],
+            [
+                User::NAME => $updateUserDTO[UpdateUserDTO::NAME],
+                User::SURNAME => $updateUserDTO[UpdateUserDTO::SURNAME],
+                User::EMAIL => $updateUserDTO[UpdateUserDTO::EMAIL],
+                User::PASSWORD => $updateUserDTO[UpdateUserDTO::PASSWORD],
+                User::AVATAR => $updateUserDTO[UpdateUserDTO::AVATAR],
+            ]
+        );
+
+        return $user;
     }
 
     /**
@@ -90,7 +96,8 @@ class UserRepository
         string $name,
         string $surname,
         string $email,
-        string $password
+        string $password,
+        bool $superadmin = false
     ): void {
         User::upsert(
             [
@@ -100,6 +107,7 @@ class UserRepository
                 User::EMAIL => $email,
                 User::EMAIL_VERIFIED_AT => now(),
                 User::PASSWORD => Hash::make($password),
+                User::IS_SUPERADMIN => $superadmin,
             ],
             User::EMAIL,
             [
@@ -121,7 +129,7 @@ class UserRepository
     {
         $user->syncPermissions($permissionIds);
 
-        return $user->refresh();
+        return $user->load('permissions:id,name');
     }
 
     /**
@@ -136,7 +144,7 @@ class UserRepository
     {
         $user->syncRoles($roleIds);
 
-        return $user->refresh();
+        return $user->load('roles:id,name');
     }
 
     /**
@@ -151,7 +159,7 @@ class UserRepository
     {
         $user->assignRole($roleIds);
 
-        return $user->refresh();
+        return $user->load('roles:id,name');
     }
 
     public function getAllPermissions(User $user): Collection
@@ -162,5 +170,23 @@ class UserRepository
     public function getRoles(User $user): Collection
     {
         return $user->roles;
+    }
+
+    public function loadRelations(
+        User $user,
+        bool $permissions = false,
+        bool $roles = false
+    ): User {
+        $relations = [];
+
+        if ($permissions) {
+            $relations[] = 'permissions:id,name';
+        }
+
+        if ($roles) {
+            $relations[] = 'roles:id,name';
+        }
+
+        return $user->load($relations);
     }
 }

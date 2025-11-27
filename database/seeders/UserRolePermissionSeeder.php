@@ -59,7 +59,8 @@ class UserRolePermissionSeeder extends Seeder
                     $user['name'],
                     $user['name'],
                     $user['email'],
-                    $user['password']
+                    $user['password'],
+                    isset($user['superadmin']) ? $user['superadmin'] : false
                 );
 
                 $mUser = $userRepository->findOneBy(User::EMAIL, $user['email']);

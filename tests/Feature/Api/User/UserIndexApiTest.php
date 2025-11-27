@@ -1,24 +1,24 @@
 <?php
 
-namespace Tests\Feature\Api\Role;
+namespace Tests\Feature\Api\User;
 
+use App\Modules\User\Models\User;
 use Tests\TestCase;
-use App\Modules\Role\Models\Role;
-use App\Modules\Role\Repositories\RoleRepository;
+use App\Modules\User\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class RoleIndexApiTest extends TestCase
+class UserIndexApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private $api = 'api/roles';
+    private $api = 'api/users';
 
-    protected RoleRepository $roleRepo;
+    protected UserRepository $userRepo;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->roleRepo = new RoleRepository(new Role);
+        $this->userRepo = new UserRepository(new User);
     }
 
     public function test_index_200()
@@ -39,7 +39,8 @@ class RoleIndexApiTest extends TestCase
     {
         $user = $this->superAdmin();
         $token = $this->getAccessToken($user);
-        $names = $this->roleRepo->all()->pluck(Role::NAME)->toArray();
+
+        $names = $this->userRepo->all()->pluck(User::NAME)->toArray();
         $dataString = $this->getMostRepeatedSubstring($names, 2);
         $query = http_build_query([
             'search' => $dataString['substring'] ?? ''

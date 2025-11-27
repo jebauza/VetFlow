@@ -54,7 +54,7 @@ class RoleDestroyApiTest extends TestCase
         $token = $this->getAccessToken($user);
 
         $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->getJson(str_replace(':id', Str::uuid(), $this->api))
+            ->getJson(str_replace(':id', Str::uuid()->toString(), $this->api))
             ->assertStatus(404)
             ->assertJsonStructure(['message']);
     }

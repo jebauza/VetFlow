@@ -5,9 +5,9 @@ namespace App\Modules\Auth\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
-use App\Modules\User\DTOs\UserDTO;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Modules\User\DTOs\CreateUserDTO;
 use App\Common\Controllers\ApiController;
 use App\Modules\Auth\Services\AuthService;
 use App\Modules\Auth\Requests\LoginRequest;
@@ -29,7 +29,7 @@ class AuthController extends ApiController
      *
      * **201 Created**
      * ```json
-     *{"id":"9ff8ac68-6f9b-4c14-96a8-c4086f30fabf","email":"pepe@gmail.com","name":"Pepe Gonzalez"}
+     *{"id":"a0431d02-953e-442a-9b42-5ec1be5d8c56","email":"jebauza1989@gmail.com","name":"jorge Ernesto","surname":"Bauza"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -48,16 +48,21 @@ class AuthController extends ApiController
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        $userDTO = UserDTO::fromRequest($request);
+        $createUserDTO = CreateUserDTO::fromRequest($request);
 
         try {
             DB::beginTransaction();
 
-            $user = $this->authService->register($userDTO);
+            $user = $this->authService->register($createUserDTO);
 
             DB::commit();
 
-            return response()->json($user->only(User::ID, User::EMAIL, User::NAME), 201);
+            return response()->json($user->only(
+                User::ID,
+                User::EMAIL,
+                User::NAME,
+                User::SURNAME
+            ), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
