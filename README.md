@@ -103,6 +103,10 @@ To run the automated test suite, use the following command:
 ./vendor/bin/sail artisan test
 ```
 
+## 🧪 Telescope
+
+http://localhost:8080/telescope
+
 ## 📄 License
 
 This project is licensed under the MIT License. See the LICENSE.md file for details.
