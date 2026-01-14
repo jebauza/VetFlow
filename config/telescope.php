@@ -93,7 +93,7 @@ return [
     */
 
     'middleware' => [
-        'web',
+        'api',
         Authorize::class,
     ],
 
@@ -109,7 +109,7 @@ return [
     */
 
     'only_paths' => [
-        // 'api/*'
+        'api/*'
     ],
 
     'ignore_paths' => [
@@ -145,7 +145,7 @@ return [
         ],
 
         Watchers\ClientRequestWatcher::class => [
-            'enabled' => env('TELESCOPE_CLIENT_REQUEST_WATCHER', true),
+            'enabled' => env('TELESCOPE_CLIENT_REQUEST_WATCHER', default: false),
             'ignore_hosts' => [],
         ],
 
@@ -180,20 +180,20 @@ return [
             'level' => 'error',
         ],
 
-        Watchers\MailWatcher::class => env('TELESCOPE_MAIL_WATCHER', true),
+        Watchers\MailWatcher::class => env('TELESCOPE_MAIL_WATCHER', false),
 
         Watchers\ModelWatcher::class => [
-            'enabled' => env('TELESCOPE_MODEL_WATCHER', true),
-            'events' => ['eloquent.*'],
-            'hydrations' => true,
+            'enabled' => env('TELESCOPE_MODEL_WATCHER', false),
+            'events' => ['created', 'updated'],
+            'hydrations' => false,
         ],
 
-        Watchers\NotificationWatcher::class => env('TELESCOPE_NOTIFICATION_WATCHER', true),
+        Watchers\NotificationWatcher::class => env('TELESCOPE_NOTIFICATION_WATCHER', false),
 
         Watchers\QueryWatcher::class => [
             'enabled' => env('TELESCOPE_QUERY_WATCHER', true),
-            'ignore_packages' => true,
-            'ignore_paths' => [],
+            // 'ignore_packages' => true,
+            // 'ignore_paths' => [],
             'slow' => 100,
         ],
 
@@ -207,6 +207,6 @@ return [
         ],
 
         Watchers\ScheduleWatcher::class => env('TELESCOPE_SCHEDULE_WATCHER', true),
-        Watchers\ViewWatcher::class => env('TELESCOPE_VIEW_WATCHER', true),
+        Watchers\ViewWatcher::class => false,
     ],
 ];
