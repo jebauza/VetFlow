@@ -30,7 +30,9 @@ class UserFakeSeeder extends Seeder
             Role::RECEPTIONIST_NAME
         ]);
         $rolesCount = $roles->count();
-        $permissions = $permissionRepo->whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN]);
+        $permissions = Permission::whereNotIn(Permission::NAME, [Permission::NAME_SUPERADMIN])
+            ->with('roles')
+            ->get();
         $users = User::factory($rolesCount * $chunkUser)->create();
 
         $users->chunk($chunkUser)->each(function ($chunkOfUsers, $index) use ($userRepo, $roles) {

@@ -41,8 +41,10 @@ class UserService
         try {
             $user = $this->userRepo->create($createUserDTO->toArray());
 
+            // Telescope::store(app('request'));
+
             if ($createUserDTO->{CreateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->syncRoleIdsToUser($user, [$createUserDTO->{CreateUserDTO::ROLE_ID}]);
+                $user = $this->userRepo->assignRoles($user, [$createUserDTO->{CreateUserDTO::ROLE_ID}]);
             }
 
             return $this->userRepo->loadRelations($user, false, true);
@@ -73,7 +75,7 @@ class UserService
             $user = $this->userRepo->update($id, $updateUserDTO->toArray(true));
 
             if ($updateUserDTO->{UpdateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->syncRoleIdsToUser($user, [$updateUserDTO->{CreateUserDTO::ROLE_ID}]);
+                $user = $this->userRepo->syncRoles($user, [$updateUserDTO->{CreateUserDTO::ROLE_ID}]);
             }
 
             if ($oldAvatar) {

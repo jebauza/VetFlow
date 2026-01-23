@@ -43,19 +43,19 @@ class UserRolePermissionSeeder extends Seeder
                 $permissionIds = $allPermissions->whereIn(Permission::NAME, $role['permissions'])
                     ->pluck(Permission::ID)
                     ->toArray();
-                $roleRepo->syncPermissionIdsToRole($mRole, $permissionIds);
+                $roleRepo->assignPermissions($mRole, $permissionIds);
             }
         }
         $allRoles = $roleRepo->all();
 
 
-        // Create users
+        // // Create users
         $configUsers = config('vetflow.users');
-        $userRepository = app(UserRepository::class);
-        $userRepository->deleteAllExcept(User::EMAIL, array_column($configUsers, 'email'));
+        $userRepo = app(UserRepository::class);
+        $userRepo->deleteAllExcept(User::EMAIL, array_column($configUsers, 'email'));
         foreach ($configUsers as $user) {
             if (!empty($user['email'])) {
-                $userRepository->upsert(
+                $userRepo->upsert(
                     $user['name'],
                     $user['name'],
                     $user['email'],
@@ -63,20 +63,20 @@ class UserRolePermissionSeeder extends Seeder
                     isset($user['superadmin']) ? $user['superadmin'] : false
                 );
 
-                $mUser = $userRepository->findOneBy(User::EMAIL, $user['email']);
+                $mUser = $userRepo->findOneBy(User::EMAIL, $user['email']);
 
                 if (!empty($user['permissions']) && $mUser) {
                     $permissionIds = $allPermissions->whereIn(Permission::NAME, $user['permissions'])
                         ->pluck(Permission::ID)
                         ->toArray();
-                    $userRepository->syncPermissionIdsToUser($mUser, $permissionIds);
+                    $userRepo->assignPermissions($mUser, $permissionIds);
                 }
 
                 if (!empty($user['roles']) && $mUser) {
                     $roleIds = $allRoles->whereIn(Role::NAME, $user['roles'])
                         ->pluck(Role::ID)
                         ->toArray();
-                    $userRepository->syncRoleIdsToUser($mUser, $roleIds);
+                    $userRepo->assignRoles($mUser, $roleIds);
                 }
             }
         }

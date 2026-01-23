@@ -26,16 +26,17 @@ class RoleService
     {
         $role = $this->roleRepo->create($roleDTO->toArray(true));
 
-        $role->syncPermissions($roleDTO->{RoleDTO::PERMISSION_IDS});
+        $role = $this->roleRepo->assignPermissions($role, $roleDTO->{RoleDTO::PERMISSION_IDS});
 
         return $this->roleRepo->load($role, ['permissions']);
     }
 
     public function updateRole(string $id, RoleDTO $roleDTO): Role
     {
-        $role = $this->roleRepo->update($id, $roleDTO->toArray(true));
-
-        $role->syncPermissions($roleDTO->{RoleDTO::PERMISSION_IDS});
+        $role = $this->roleRepo->syncPermissions(
+            $this->roleRepo->update($id, $roleDTO->toArray(true)),
+            $roleDTO->{RoleDTO::PERMISSION_IDS}
+        );
 
         return $this->roleRepo->load($role, ['permissions']);
     }
