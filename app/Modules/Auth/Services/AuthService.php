@@ -6,22 +6,32 @@ use App\Modules\Role\Models\Role;
 use App\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Modules\Auth\DTOs\AuthTokenDTO;
 use App\Modules\User\DTOs\CreateUserDTO;
+use App\Modules\User\Services\UserService;
 use App\Modules\Permission\Models\Permission;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use App\Modules\User\Repositories\UserRepository;
 
 class AuthService
 {
     public function __construct(
-        protected readonly UserRepository $userRepo
+        protected readonly UserService $userService
     ) {}
 
-    public function register(CreateUserDTO $createUserDTO): User
+    public function register1(CreateUserDTO $createUserDTO): User
     {
-        $createUserDTO->{CreateUserDTO::PASSWORD} = Hash::make($createUserDTO->{CreateUserDTO::PASSWORD});
-        $user = $this->userRepo->create($createUserDTO->toArray());
+        $user = $this->userService->create($createUserDTO);
 
         return $user;
+    }
+
+    public function register(CreateUserDTO $createUserDTO): AuthTokenDTO
+    {
+        $user = $this->userService->create($createUserDTO);
+        $token = JWTAuth::fromUser($user);
+
+        return new AuthTokenDTO($token, $user);
     }
 
     public function me(): array

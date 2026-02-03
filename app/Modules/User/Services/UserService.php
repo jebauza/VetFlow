@@ -26,12 +26,10 @@ class UserService
         return $this->userRepo->findOrFail($id, true);
     }
 
-    public function createUser(CreateUserDTO $createUserDTO, UploadedFile $avatar = null): User
+    public function create(CreateUserDTO $dto, UploadedFile $avatar = null): User
     {
-        $createUserDTO->{CreateUserDTO::PASSWORD} = Hash::make($createUserDTO->{CreateUserDTO::PASSWORD});
-
         if ($avatar) {
-            $createUserDTO->{CreateUserDTO::AVATAR} = FileHelper::saveFile(
+            $dto->{CreateUserDTO::AVATAR} = FileHelper::saveFile(
                 $avatar,
                 User::PATH_FOLDER_AVATARS,
                 'public'
@@ -39,18 +37,18 @@ class UserService
         }
 
         try {
-            $user = $this->userRepo->create($createUserDTO->toArray());
+            $user = $this->userRepo->create($dto->toArray());
 
             // Telescope::store(app('request'));
 
-            if ($createUserDTO->{CreateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->assignRoles($user, [$createUserDTO->{CreateUserDTO::ROLE_ID}]);
+            if ($dto->{CreateUserDTO::ROLE_ID}) {
+                $user = $this->userRepo->assignRoles($user, [$dto->{CreateUserDTO::ROLE_ID}]);
             }
 
             return $this->userRepo->loadRelations($user, false, true);
         } catch (\Throwable $th) {
-            if ($createUserDTO->{CreateUserDTO::AVATAR}) {
-                FileHelper::deleteFile($createUserDTO->{CreateUserDTO::AVATAR}, 'public');
+            if ($dto->{CreateUserDTO::AVATAR}) {
+                FileHelper::deleteFile($dto->{CreateUserDTO::AVATAR}, 'public');
             }
             throw $th;
         }

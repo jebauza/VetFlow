@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     protected User $superAdmin;
-    protected string $AccessToken;
+    protected string $accessToken;
 
     protected function setUp(): void
     {
@@ -37,8 +37,8 @@ abstract class TestCase extends BaseTestCase
 
     protected function getAccessToken(User $user): string
     {
-        $this->AccessToken ??= JWTAuth::fromUser($user);
-        return $this->AccessToken;
+        $this->accessToken ??= JWTAuth::fromUser($user);
+        return $this->accessToken;
     }
 
     /**
