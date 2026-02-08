@@ -5,6 +5,7 @@ namespace App\Modules\Role\Resources;
 use Illuminate\Http\Request;
 use App\Modules\Role\Models\Role;
 use App\Modules\Permission\Models\Permission;
+use App\Modules\Permission\Resources\PermissionResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
 
@@ -23,12 +24,9 @@ class RoleResource extends JsonResource
             'id' => $this->{Role::ID},
             'name' => $this->{Role::NAME},
             'date' => Carbon::create($this->{Role::CREATED_AT})->toDateTimeString(),
-            'permissions' => $this->permissions->map(function ($permission) {
-                return [
-                    'id' => $permission->{Permission::ID},
-                    'name' => $permission->{Permission::NAME},
-                ];
-            }),
+            'permissions' => PermissionResource::collection(
+                $this->whenLoaded('permissions')
+            ),
         ];
     }
 }

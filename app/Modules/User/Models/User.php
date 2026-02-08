@@ -102,7 +102,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password' => 'hashed', // Laravel handles Hash::make() automatically
         ];
     }
 

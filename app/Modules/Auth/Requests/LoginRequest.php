@@ -12,8 +12,8 @@ class LoginRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            self::EMAIL => 'email|required',
-            self::PASSWORD => 'required',
+            self::EMAIL => 'required|email',
+            self::PASSWORD => 'required|string|min:8',
         ];
     }
 }

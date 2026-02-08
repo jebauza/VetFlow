@@ -4,6 +4,7 @@ namespace App\Modules\Role\Services;
 
 use App\Modules\Role\Models\Role;
 use App\Modules\Role\DTOs\RoleDTO;
+use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Role\Repositories\RoleRepository;
 
 class RoleService
@@ -12,36 +13,42 @@ class RoleService
         protected readonly RoleRepository $roleRepo
     ) {}
 
-    public function getRoles(string $search = null)
+    public function all(string $search = null): Collection
     {
-        return $this->roleRepo->getBySearch($search);
+        return $this->roleRepo->search($search, true);
     }
 
-    public function getRoleById(string $id): Role
+    public function findById(string $id): Role
     {
-        return $this->roleRepo->findOrFail($id);
+        /** @var Role $role */
+        $role = $this->roleRepo->findOrFailWithRelations($id, ['permissions']);
+
+        return $role;
     }
 
-    public function createRole(RoleDTO $roleDTO): Role
+    public function create(RoleDTO $dto): Role
     {
-        $role = $this->roleRepo->create($roleDTO->toArray(true));
+        $role = $this->roleRepo->create($dto->toArray(true));
 
-        $role = $this->roleRepo->assignPermissions($role, $roleDTO->{RoleDTO::PERMISSION_IDS});
+        $role = $this->roleRepo->assignPermissions($role, $dto->{RoleDTO::PERMISSION_IDS});
 
         return $this->roleRepo->load($role, ['permissions']);
     }
 
-    public function updateRole(string $id, RoleDTO $roleDTO): Role
+    public function update(string $id, RoleDTO $dto): Role
     {
+        $role = $this->roleRepo->findOrFail($id);
+        $role = $this->roleRepo->update($role, $dto->toArray(true));
+
         $role = $this->roleRepo->syncPermissions(
-            $this->roleRepo->update($id, $roleDTO->toArray(true)),
-            $roleDTO->{RoleDTO::PERMISSION_IDS}
+            $role,
+            $dto->{RoleDTO::PERMISSION_IDS}
         );
 
         return $this->roleRepo->load($role, ['permissions']);
     }
 
-    public function deleteRole(string $id)
+    public function delete(string $id)
     {
         $this->roleRepo->delete($id);
     }

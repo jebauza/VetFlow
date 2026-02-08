@@ -2,6 +2,8 @@
 
 namespace App\Modules\User\DTOs;
 
+use Illuminate\Http\UploadedFile;
+
 class CreateUserDTO
 {
     const EMAIL = 'email';
@@ -23,7 +25,7 @@ class CreateUserDTO
         public readonly string $surname,
         public string $password,
 
-        public ?string $avatar = null,
+        public UploadedFile|string|null $avatar = null,
         public readonly ?string $phone = null,
         public readonly ?string $type_document = null,
         public readonly ?string $n_document = null,
@@ -58,6 +60,7 @@ class CreateUserDTO
 
     public static function fromRequest($request): self
     {
+
         return new self(
             email: $request->{self::EMAIL},
             name: $request->{self::NAME},

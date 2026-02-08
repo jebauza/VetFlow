@@ -12,7 +12,7 @@ class StoreRoleRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            RoleDTO::NAME => 'required|string|unique:roles,name',
+            RoleDTO::NAME => 'required|string|max:255|unique:roles,name',
             RoleDTO::PERMISSION_IDS => 'present|array',
             RoleDTO::PERMISSION_IDS . '.*' => 'uuid',
         ];

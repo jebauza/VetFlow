@@ -5,7 +5,6 @@ namespace App\Modules\User\Repositories;
 use App\Modules\User\Models\User;
 use App\Common\Helpers\UuidHelper;
 use Illuminate\Support\Facades\Hash;
-use App\Modules\User\DTOs\UpdateUserDTO;
 use Illuminate\Database\Eloquent\Builder;
 use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,22 +16,7 @@ class UserRepository extends BaseRepository
         parent::__construct($model);
     }
 
-    public function findOrFail(string $id, bool $withRelations = false): User
-    {
-        return User::when($withRelations, function (Builder $q) {
-            $q->with([
-                'permissions:id,name',
-                'roles.permissions:id,name'
-            ]);
-        })->findOrFail($id);
-    }
-
-    public function findOneBy(string $column, string $value): User
-    {
-        return User::firstWhere($column, $value);
-    }
-
-    public function getBySearch(?string $search, bool $withRelations = false): Collection
+    public function baseSearch(?string $search = null, bool|array $relations = false): Builder
     {
         return User::withoutSuperAdmin()
             ->when(filled($search), function (Builder $q) use ($search) {
@@ -41,32 +25,35 @@ class UserRepository extends BaseRepository
                     ->orWhere(User::EMAIL, 'ILIKE', "%{$search}%")
                     ->orWhere(User::N_DOCUMENT, 'ILIKE', "%{$search}%");
             })
-            ->when($withRelations, function (Builder $q) {
-                $q->with([
-                    'permissions:id,name',
-                    'roles.permissions:id,name'
-                ]);
+            ->when($relations, function (Builder $q) use ($relations) {
+                if (is_array($relations)) {
+                    $q->with($relations);
+                } else {
+
+                    $q->with([
+                        'permissions:id,name',
+                        'roles.permissions:id,name'
+                    ]);
+                }
             })
-            ->orderByRaw('LOWER( CONCAT(' . User::NAME . ',' . User::SURNAME . ') ) ASC')
-            ->get();
+            // ->orderByRaw('LOWER( CONCAT(' . User::NAME . ',' . User::SURNAME . ') ) ASC')
+            ->orderBy(User::TABLE . '.' . User::NAME)
+            ->orderBy(User::TABLE . '.' . User::SURNAME);
     }
 
-    public function update(string $id, array $updateUserDTO): User
+    public function search(?string $search, bool|array $relations = false): Collection
     {
-        $user = User::updateOrCreate(
-            [
-                User::ID => $id
-            ],
-            [
-                User::NAME => $updateUserDTO[UpdateUserDTO::NAME],
-                User::SURNAME => $updateUserDTO[UpdateUserDTO::SURNAME],
-                User::EMAIL => $updateUserDTO[UpdateUserDTO::EMAIL],
-                User::PASSWORD => $updateUserDTO[UpdateUserDTO::PASSWORD],
-                User::AVATAR => $updateUserDTO[UpdateUserDTO::AVATAR],
-            ]
-        );
+        return $this->baseSearch($search, $relations)->get();
+    }
 
-        return $user;
+    public function searchCount(?string $search, bool|array $relations = false): int
+    {
+        return $this->baseSearch($search, $relations)->count();
+    }
+
+    public function findOneBy(string $column, string $value): User
+    {
+        return User::firstWhere($column, $value);
     }
 
     /**

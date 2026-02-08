@@ -3,6 +3,7 @@
 namespace App\Modules\Role\Repositories;
 
 use App\Modules\Role\Models\Role;
+use Illuminate\Database\Eloquent\Builder;
 use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Permission\Models\Permission;
@@ -14,40 +15,43 @@ class RoleRepository extends BaseRepository
         parent::__construct($model);
     }
 
-    /**
-     * Get all roles ordered by name.
-     *
-     * @return Collection<int, Role>
-     */
-    public function all(): Collection
+    public function queryAll(): Builder
     {
-        return Role::orderBy(Role::NAME)
-            ->get();
+        return Role::query()->orderBy(Role::NAME);
     }
 
-    /**
-     * Get roles by a search query, ordered alphabetically by name.
-     *
-     * @param string|null $search The search string.
-     * @return Collection<int, Role>
-     */
-    public function getBySearch(?string $search): Collection
+    public function baseSearch(?string $search = null, bool|array $relations = false): Builder
     {
         return Role::search($search)
             ->with('permissions:' . Permission::ID . ',' . Permission::NAME)
-            ->orderByRaw('LOWER(' . Role::NAME . ') ASC')
-            ->get();
+            ->when($relations, function (Builder $q) use ($relations) {
+                if (is_array($relations)) {
+                    $q->with($relations);
+                } else {
+
+                    $q->with([
+                        'permissions:' . Permission::ID . ',' . Permission::NAME,
+                    ]);
+                }
+            })
+            ->orderByRaw('LOWER(' . Role::NAME . ') ASC');
     }
 
-    /**
-     * Create a new role.
-     *
-     * @param array<string, mixed> $data The data for the new role.
-     * @return Role
-     */
-    public function create(array $data): Role
+    public function search(?string $search, bool|array $relations = false): Collection
     {
-        return Role::create($data);
+        return $this->baseSearch($search, $relations)->get();
+    }
+
+    public function searchCount(?string $search, bool|array $relations = false): int
+    {
+        return $this->baseSearch($search, $relations)->count();
+    }
+
+    public function queryBySearch(?string $search = null): Builder
+    {
+        return Role::search($search)
+            ->with('permissions:' . Permission::ID . ',' . Permission::NAME)
+            ->orderByRaw('LOWER(' . Role::NAME . ') ASC');
     }
 
     /**

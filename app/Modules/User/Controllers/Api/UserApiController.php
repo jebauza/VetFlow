@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use App\Common\Responses\ApiResponse;
 use Illuminate\Support\Facades\Storage;
 use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\User\DTOs\UpdateUserDTO;
@@ -20,10 +21,12 @@ use App\Modules\User\Requests\UpdateUserRequest;
 class UserApiController extends ApiController
 {
     public function __construct(
-        protected readonly UserService $userService
+        protected readonly UserService $service
     ) {}
 
     /**
+     * @LRDparam search string
+     *
      * @lrd:start
      *
      * **Notes**
@@ -35,12 +38,12 @@ class UserApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Request processed successfully","data":[{"id":"2f78f669-8123-4564-9936-6de15b6dfc73","name":"admin@example.com","surname":"admin@example.com","email":"admin@example.com","roles":[],"all_permissions":[]},{"id":"a046db2d-af61-42c1-a9e9-b1c5a5a65e92","name":"Alexandrine Aufderhar","surname":"Hermiston","email":"yauer@example.org","roles":[{"id":"a046db2c-ad46-4e23-89e6-7edd826d76fc","name":"Admin"}],"all_permissions":[{"id":"a046db2c-80e7-4fcd-a077-dd1b003e85c7","name":"admin"},{"id":"a046db2c-81fa-453a-bb64-bfa7b2e3fb5e","name":"role.register"},{"id":"a046db2c-8315-4962-b088-5175902065c8","name":"role.list"},{"id":"a046db2c-843b-4544-bb63-f1709174d305","name":"role.edit"},{"id":"a046db2c-8538-4469-aeb6-36483b1b4683","name":"role.delete"},{"id":"a046db2c-8626-4e22-9b8c-f7bf70f436bf","name":"veterinary.register"},{"id":"a046db2c-8714-4331-a59e-6da92cf68718","name":"veterinary.list"},{"id":"a046db2c-882a-4973-83fd-f6880c9e158d","name":"veterinary.edit"},{"id":"a046db2c-895b-4ee1-918a-7947f644c55e","name":"veterinary.delete"}]}]}
+     *{"message":"OK","data":[{"id":"a1063012-a2ee-4f5e-a0b2-03817335bb12","name":"Test","surname":"Test","email":"test4@test.com","avatar":null,"phone":null,"type_document":null,"n_document":null,"birth_date":null,"designation":null,"gender":null,"roles":[{"id":"a1030860-2a5d-482d-b4d2-8450ea436186","name":"rol test2"}],"all_permissions":[{"id":"a103085f-d38c-4c86-a46a-79b1e5c3c419","name":"veterinary.register"}]}]}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -49,8 +52,6 @@ class UserApiController extends ApiController
      * ```
      *
      * @lrd:end
-     *
-     * @LRDparam search string
      *
      * @LRDresponses 200|401|500
      */
@@ -61,11 +62,12 @@ class UserApiController extends ApiController
         ]);
 
         if ($validator->fails())
-            return $this->sendError422($validator->errors()->toArray());
+            return ApiResponse::validation($validator->errors()->toArray());
 
-        return $this->sendResponse(
-            null,
-            UserResource::collection($this->userService->getUsers($request->input('search')))
+        return ApiResponse::successData(
+            UserResource::collection(
+                $this->service->all($request->input('search'))
+            )
         );
     }
 
@@ -80,17 +82,17 @@ class UserApiController extends ApiController
      *
      * **201 Created**
      * ```json
-     *{"message":"Created successfully","data":{"id":"a043563d-e5eb-4304-8a9d-f5c5411c646d","name":"Francisdailin","surname":"Cobas","email":"francisdailin@gmail.com","permissions":[]}}
+     *{"message":"Created","data":{"id":"a106317e-889c-40f6-a8dd-cdcffb2b9886","name":"Test8","surname":"Test8","email":"test7@test.com","avatar":"http:\/\/localhost:8080\/storage\/user\/avatars\/P1NohQnOiGctG5beFqp2PIAzuWtNLPBLm1xBZBIq.jpg","phone":"622788616","type_document":"dni","n_document":"jmYYDaHRwh","birth_date":"1989-12-19","designation":"sdsdsdsdsd","gender":"female","roles":[{"id":"a1030860-2a5d-482d-b4d2-8450ea436186","name":"rol test2"}],"all_permissions":[{"id":"a103085f-d38c-4c86-a46a-79b1e5c3c419","name":"veterinary.register"}]}}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}
+     *{"message":"Validation errors","errors":{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -104,22 +106,13 @@ class UserApiController extends ApiController
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $createUserDTO = CreateUserDTO::fromRequest($request);
+        $dto = CreateUserDTO::fromRequest($request);
 
-        try {
-            DB::beginTransaction();
-            $user = $this->userService->createUser($createUserDTO, $request->file(CreateUserDTO::AVATAR));
-            DB::commit();
+        $user = DB::transaction(function () use ($dto) {
+            return $this->service->create($dto);
+        });
 
-            return $this->sendResponse(
-                __('Created successfully'),
-                (new UserResource($user)),
-                201
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::created(new UserResource($user));
     }
 
     /**
@@ -133,22 +126,22 @@ class UserApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Request processed successfully","data":{"id":"a04733c5-6e3e-4df9-b0aa-ce14fadeb9ea","name":"Earnestine Sanford","surname":"Schumm","email":"fkohler@example.net","avatar":null,"roles":[{"id":"a04733c4-6c94-4511-ab2c-f303f5b634b9","name":"Assistant"}],"all_permissions":[{"id":"a04733c4-35e3-4091-8001-a9f5fa42cd3f","name":"staff.delete"},{"id":"a04733c4-37c3-4d70-8472-1572766142a7","name":"appointment.register"},{"id":"a04733c4-39d5-4d63-bed4-0f01365cdb60","name":"appointment.list"},{"id":"a04733c4-3c28-46ca-a15a-87caf3e21661","name":"appointment.edit"},{"id":"a04733c4-3eeb-4017-be06-affc32598902","name":"appointment.delete"},{"id":"a04733c4-426e-4813-9720-b4d27810ae3a","name":"payment.show"},{"id":"a04733c4-4575-4364-8983-5f9776c4cf1a","name":"payment.edit"},{"id":"a04733c4-483e-47b4-b7a2-9bbb45b4aa94","name":"calendar"},{"id":"a04733c4-4adc-4657-9c8d-886f9aa679ff","name":"vaccionation.register"}]}}
+     *{"message":"OK","data":{"id":"a106317e-889c-40f6-a8dd-cdcffb2b9886","name":"Test8","surname":"Test8","email":"test7@test.com","avatar":"http:\/\/localhost:8080\/storage\/user\/avatars\/P1NohQnOiGctG5beFqp2PIAzuWtNLPBLm1xBZBIq.jpg","phone":"622788616","type_document":"dni","n_document":"jmYYDaHRwh","birth_date":"1989-12-19","designation":"sdsdsdsdsd","gender":"female","roles":[{"id":"a1030860-2a5d-482d-b4d2-8450ea436186","name":"rol test2"}],"all_permissions":[{"id":"a103085f-d38c-4c86-a46a-79b1e5c3c419","name":"veterinary.register"}]}}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **404 Not Found**
      * ```json
-     *{"message": "No query results for model [App\\Modules\\Role\\Models\\Role] a014efff-69d0-46a4-877f-6b98c428e978"}
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"role":["Must be a valid UUID."]}
+     *{"message":"Validation errors","errors":{"user":["Must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -163,69 +156,14 @@ class UserApiController extends ApiController
     public function show(string $id): JsonResponse
     {
         if (!Str::isUuid($id)) {
-            return $this->sendError422(['user' => [__('Must be a valid UUID.')]]);
+            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
         }
 
-        $user = $this->userService->getUserById($id);
+        $user = $this->service->findById($id);
 
-        return $this->sendResponse(
-            null,
-            (new UserResource($user))
+        return ApiResponse::successData(
+            new UserResource($user)
         );
-    }
-
-    /**
-     * @lrd:start
-     *
-     * **Notes**
-     * - Requires **Access Token** obtained from **auth/login**, configuration in **auth/me**.
-     *
-     * **Description**
-     * - Retrieve and display a specific user avatar by its ID.
-     *
-     * **200 OK**
-     *
-     * **401 Unauthorized**
-     * ```json
-     *{"message":"Unauthenticated."}
-     * ```
-     *
-     * **404 Not Found**
-     * ```json
-     *{"message": "Avatar not found"}
-     * ```
-     *
-     * **422 Unprocessable Entity**
-     * ```json
-     *{"role":["Must be a valid UUID."]}
-     * ```
-     *
-     * **500 Internal Server Error**
-     * ```json
-     *{"message":"Internal Server Error"}
-     * ```
-     *
-     * @lrd:end
-     *
-     * @LRDresponses 200|401|404|422|500
-     */
-    public function avatar(string $id)
-    {
-        if (!Str::isUuid($id)) {
-            return $this->sendError422(['user' => [__('Must be a valid UUID.')]]);
-        }
-
-        $user = $this->userService->getUserById($id);
-
-        if (!$user || !$user->avatar) {
-            return  $this->sendError(__('Avatar not found'), 404);
-        }
-
-        if (!Storage::disk('public')->exists($user->avatar)) {
-            return $this->sendError(__('Avatar not found'), 404);
-        }
-
-        return Storage::disk('public')->download($user->avatar);
     }
 
     /**
@@ -239,17 +177,21 @@ class UserApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Updated successfully","data":{"id":"a043563d-e5eb-4304-8a9d-f5c5411c646d","name":"Francisdailin","surname":"Cobas","email":"francisdailin@gmail.com","permissions":[]}}
+     *{"message":"OK","data":{"id":"a106317e-889c-40f6-a8dd-cdcffb2b9886","name":"Test8","surname":"Test8","email":"test7@test.com","avatar":"http:\/\/localhost:8080\/storage\/user\/avatars\/P1NohQnOiGctG5beFqp2PIAzuWtNLPBLm1xBZBIq.jpg","phone":"622788616","type_document":"dni","n_document":"jmYYDaHRwh","birth_date":"1989-12-19","designation":"sdsdsdsdsd","gender":"female","roles":[{"id":"a1030860-2a5d-482d-b4d2-8450ea436186","name":"rol test2"}],"all_permissions":[{"id":"a103085f-d38c-4c86-a46a-79b1e5c3c419","name":"veterinary.register"}]}}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
+     *
+     * **404 Not Found**
+     * ```json
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}
+     *{"message":"Validation errors","errors":{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -259,31 +201,19 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|422|500
+     * @LRDresponses 200|401|404|422|500
      */
     public function update(UpdateUserRequest $request, string $id)
     {
-        $updateUserDTO = new UpdateUserDTO(...$request->validated());
-        $user = $this->userService->getUserById($id);
+        $dto = new UpdateUserDTO(...$request->validated());
 
-        try {
-            DB::beginTransaction();
-            $user = $this->userService->updateUser(
-                $user->{User::ID},
-                $updateUserDTO,
-                $request->file(UpdateUserDTO::AVATAR)
-            );
-            DB::commit();
+        $user = DB::transaction(function () use ($id, $dto) {
+            return $this->service->update($id, $dto);
+        });
 
-            return $this->sendResponse(
-                __('Updated successfully'),
-                (new UserResource($user)),
-                200
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::successData(
+            new UserResource($user)
+        );
     }
 
     /**
@@ -302,17 +232,17 @@ class UserApiController extends ApiController
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **404 Not Found**
      * ```json
-     *{"message": "No query results for model a014efff-69d0-46a4-877f-6b98c428e978"}
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"role":["Must be a valid UUID."]}
+     *{"message":"Validation errors","errors":{"user":["Must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -324,25 +254,16 @@ class UserApiController extends ApiController
      *
      * @LRDresponses 200|401|404|422|500
      */
-    public function destroy(string $id): JsonResponse
+    public function destroy(string $id)
     {
         if (!Str::isUuid($id)) {
-            return $this->sendError422(['user' => [__('Must be a valid UUID.')]]);
+            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
         }
 
-        $user = $this->userService->getUserById($id);
+        DB::transaction(function () use ($id) {
+            return $this->service->delete($id);
+        });
 
-        try {
-            DB::beginTransaction();
-            $this->userService->deleteUser($user->{User::ID});
-            DB::commit();
-
-            return $this->sendResponse(
-                __('Deleted successfully')
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::success(__('Deleted successfully'));
     }
 }

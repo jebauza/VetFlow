@@ -2,6 +2,8 @@
 
 namespace App\Modules\User\DTOs;
 
+use Illuminate\Http\UploadedFile;
+
 class UpdateUserDTO
 {
     const EMAIL = 'email';
@@ -23,7 +25,7 @@ class UpdateUserDTO
         public readonly string $surname,
         public string $password,
 
-        public ?string $avatar = null,
+        public UploadedFile|string|null $avatar = null,
         public readonly ?string $phone = null,
         public readonly ?string $type_document = null,
         public readonly ?string $n_document = null,
