@@ -72,6 +72,13 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function withPassword(string $password): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'password' => Hash::make($password),
+        ]);
+    }
+
     /**
      * Generates a document number based on the document type.
      *

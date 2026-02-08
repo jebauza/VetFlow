@@ -3,8 +3,10 @@
 namespace App\Modules\Role\Repositories;
 
 use App\Modules\Role\Models\Role;
+use Illuminate\Database\Eloquent\Builder;
 use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
+use App\Modules\Permission\Models\Permission;
 
 class RoleRepository extends BaseRepository
 {
@@ -13,39 +15,43 @@ class RoleRepository extends BaseRepository
         parent::__construct($model);
     }
 
-    /**
-     * Get all roles ordered by name.
-     *
-     * @return Collection<int, Role>
-     */
-    public function all(): Collection
+    public function queryAll(): Builder
     {
-        return Role::orderBy(Role::NAME)
-            ->get();
+        return Role::query()->orderBy(Role::NAME);
     }
 
-    /**
-     * Get roles by a search query, ordered alphabetically by name.
-     *
-     * @param string|null $search The search string.
-     * @return Collection<int, Role>
-     */
-    public function getBySearch(?string $search): Collection
+    public function baseSearch(?string $search = null, bool|array $relations = false): Builder
     {
         return Role::search($search)
-            ->orderByRaw('LOWER(' . Role::NAME . ') ASC')
-            ->get();
+            ->with('permissions:' . Permission::ID . ',' . Permission::NAME)
+            ->when($relations, function (Builder $q) use ($relations) {
+                if (is_array($relations)) {
+                    $q->with($relations);
+                } else {
+
+                    $q->with([
+                        'permissions:' . Permission::ID . ',' . Permission::NAME,
+                    ]);
+                }
+            })
+            ->orderByRaw('LOWER(' . Role::NAME . ') ASC');
     }
 
-    /**
-     * Create a new role.
-     *
-     * @param array<string, mixed> $data The data for the new role.
-     * @return Role
-     */
-    public function create(array $data): Role
+    public function search(?string $search, bool|array $relations = false): Collection
     {
-        return Role::create($data);
+        return $this->baseSearch($search, $relations)->get();
+    }
+
+    public function searchCount(?string $search, bool|array $relations = false): int
+    {
+        return $this->baseSearch($search, $relations)->count();
+    }
+
+    public function queryBySearch(?string $search = null): Builder
+    {
+        return Role::search($search)
+            ->with('permissions:' . Permission::ID . ',' . Permission::NAME)
+            ->orderByRaw('LOWER(' . Role::NAME . ') ASC');
     }
 
     /**
@@ -59,16 +65,38 @@ class RoleRepository extends BaseRepository
     }
 
     /**
-     * Sync permissions to a role.
+     * Assign permissions to a role.
      *
-     * @param Role $role The role instance to sync permissions to.
+     * @param Role|string $role The role instance or role ID to assign permissions to.
      * @param array<int, int> $permissionIds An array of permission IDs.
      * @return Role
      */
-    public function syncPermissionIdsToRole(Role $role, array $permissionIds): Role
+    public function assignPermissions(Role|string $role, array $permissionIds): Role
     {
+        if (is_string($role)) {
+            $role = $this->findOrFail($role);
+        }
+
+        $role->givePermissionTo($permissionIds);
+
+        return $role;
+    }
+
+    /**
+     * Sync permissions to a role.
+     *
+     * @param Role|string $role The role instance or role ID to sync permissions to.
+     * @param array<int, int> $permissionIds An array of permission IDs.
+     * @return Role
+     */
+    public function syncPermissions(Role|string $role, array $permissionIds): Role
+    {
+        if (is_string($role)) {
+            $role = $this->findOrFail($role);
+        }
+
         $role->syncPermissions($permissionIds);
 
-        return $role->refresh();
+        return $role;
     }
 }

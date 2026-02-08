@@ -4,10 +4,10 @@ namespace App\Modules\Role\Controllers\Api;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Modules\Role\Models\Role;
 use Illuminate\Http\JsonResponse;
 use App\Modules\Role\DTOs\RoleDTO;
 use Illuminate\Support\Facades\DB;
+use App\Common\Responses\ApiResponse;
 use App\Common\Controllers\ApiController;
 use Illuminate\Support\Facades\Validator;
 use App\Modules\Role\Services\RoleService;
@@ -22,6 +22,8 @@ class RoleApiController extends ApiController
     ) {}
 
     /**
+     * @LRDparam search nullable|string
+     *
      * @lrd:start
      *
      * **Notes**
@@ -33,12 +35,12 @@ class RoleApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Request processed successfully","data":[{"id":"a014ac68-f372-4793-808a-75e50142bbb4","name":"admin"},{"id":"a014ac68-f499-4d6d-b424-f0fe8ab4aa9f","name":"vet"},{"id":"a014ac68-f4fc-4c5e-af83-b163717abc24","name":"assistant"},{"id":"a014ac68-f559-45e0-8c49-130e0c795907","name":"receptionist"}]}
+     *{"message":"OK","data":[{"id":"a1000f18-aca4-4a7a-a6c7-d811fb04ec52","name":"Admin","date":"2026-02-04 14:44:13","permissions":[{"id":"a1000f18-4d8c-43e6-abd4-de01a7184dd0","name":"admin"},{"id":"a1000f18-5050-4625-8c87-a306916c446a","name":"role.register"},{"id":"a1000f18-528e-4608-855c-76a7445274b2","name":"role.list"},{"id":"a1000f18-53e8-4fc9-8688-7f9c3ea65f77","name":"role.edit"},{"id":"a1000f18-5535-45e1-a92f-92d7a4615093","name":"role.delete"},{"id":"a1000f18-568e-49ec-8ab9-be240588a659","name":"veterinary.register"},{"id":"a1000f18-5804-45f2-b520-a0d4f79972eb","name":"veterinary.list"},{"id":"a1000f18-595c-4d56-bb59-5dc98603e711","name":"veterinary.edit"},{"id":"a1000f18-5ae7-4331-b5be-146f350c183c","name":"veterinary.delete"}]},{"id":"a1000f18-b32d-442f-91b4-3f4d764e4571","name":"Assistant","date":"2026-02-04 14:44:13","permissions":[{"id":"a1000f18-7613-42cd-9a2c-7211601eef8d","name":"staff.delete"},{"id":"a1000f18-7ad5-451b-b9ba-920eb6fe705d","name":"appointment.register"},{"id":"a1000f18-7f5d-43c5-8d8b-7712629209e5","name":"appointment.list"},{"id":"a1000f18-8714-424f-af4b-f45847ff83d6","name":"appointment.edit"},{"id":"a1000f18-8bc1-4293-8a8a-d4f4e0cbb563","name":"appointment.delete"},{"id":"a1000f18-8ee4-42ff-9e58-7a153d52b478","name":"payment.show"},{"id":"a1000f18-916a-4bea-9cc8-80397de356f3","name":"payment.edit"},{"id":"a1000f18-93c9-4482-b7c0-3346ad727d07","name":"calendar"},{"id":"a1000f18-96d5-4c87-9701-cc8058569c03","name":"vaccionation.register"}]}]}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -47,8 +49,6 @@ class RoleApiController extends ApiController
      * ```
      *
      * @lrd:end
-     *
-     * @LRDparam search string
      *
      * @LRDresponses 200|401|500
      */
@@ -59,11 +59,10 @@ class RoleApiController extends ApiController
         ]);
 
         if ($validator->fails())
-            return $this->sendError422($validator->errors()->toArray());
+            return ApiResponse::validation($validator->errors()->toArray());
 
-        return $this->sendResponse(
-            null,
-            RoleResource::collection($this->service->getRoles($request->input('search')))
+        return ApiResponse::successData(
+            RoleResource::collection($this->service->all($request->input('search')))
         );
     }
 
@@ -78,17 +77,17 @@ class RoleApiController extends ApiController
      *
      * **201 Created**
      * ```json
-     *{"message":"Created successfully","data":{"id":"a03998e1-31ea-47d8-baf9-4832176a18d1","name":"Vet 2","date":"2025-10-28 22:59:44","permissions":[{"id":"a0398a9a-7008-4e4f-bf93-cee4ef193e0e","name":"pet.profile"},{"id":"a0398a9a-7161-4b5c-b32f-4c4382a2e30e","name":"staff.register"}]}}
+     *{"message":"Created","data":{"id":"a10043b5-d5cb-45e4-9025-cb513986d951","name":"Vet 2","date":"2026-02-04 17:11:20","permissions":[{"id":"a1000f18-5804-45f2-b520-a0d4f79972eb","name":"veterinary.list"},{"id":"a1000f18-595c-4d56-bb59-5dc98603e711","name":"veterinary.edit"}]}}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"name":["The name field is required."],"permission_ids":["The permission_ids field must be present."],"permission_ids.0":["The permission (a014effe-392c-42ec-a8c9-04ab3c7a43ca) is not valid."]}
+     *{"message":"Validation errors","errors":{"name":["The name field is required."],"permission_ids":["The permission ids field must be present."],"permission_ids.0":["The permission_ids.0 field must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -102,22 +101,13 @@ class RoleApiController extends ApiController
      */
     public function store(StoreRoleRequest $request): JsonResponse
     {
-        $roleDTO = new RoleDTO(...$request->validated());
+        $dto = new RoleDTO(...$request->validated());
 
-        try {
-            DB::beginTransaction();
-            $role = $this->service->createRole($roleDTO);
-            DB::commit();
+        $role = DB::transaction(function () use ($dto) {
+            return $this->service->create($dto);
+        });
 
-            return $this->sendResponse(
-                __('Created successfully'),
-                (new RoleResource($role)),
-                201
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::created(new RoleResource($role));
     }
 
     /**
@@ -136,17 +126,17 @@ class RoleApiController extends ApiController
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **404 Not Found**
      * ```json
-     *{"message": "No query results for model [App\\Modules\\Role\\Models\\Role] a014efff-69d0-46a4-877f-6b98c428e978"}
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"role":["Must be a valid UUID."]}
+     *{"message":"Validation errors","errors":{"role":["Must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -161,14 +151,13 @@ class RoleApiController extends ApiController
     public function show(string $id): JsonResponse
     {
         if (!Str::isUuid($id)) {
-            return $this->sendError422(['role' => [__('Must be a valid UUID.')]]);
+            return ApiResponse::validation(['role' => [__('Must be a valid UUID.')]]);
         }
 
-        $role = $this->service->getRoleById($id);
+        $role = $this->service->findById($id);
 
-        return $this->sendResponse(
-            null,
-            (new RoleResource($role))
+        return ApiResponse::successData(
+            new RoleResource($role)
         );
     }
 
@@ -183,22 +172,22 @@ class RoleApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Updated successfully","data":{"id":"a0398a9a-8d60-477c-92c1-e8b0028529ab","name":"rol test2","date":"2025-10-28 22:19:49","permissions":[{"id":"a0398a9a-6a37-4c20-bf1f-060fc3a4c674","name":"veterinary.profile"},{"id":"a0398a9a-6b35-4c5d-af8b-d2c7df64ee8a","name":"pet.register"}]}}
+     *{"message":"OK","data":{"id":"a10043b5-d5cb-45e4-9025-cb513986d951","name":"rol test2","date":"2026-02-04 17:11:20","permissions":[{"id":"a1000f18-5804-45f2-b520-a0d4f79972eb","name":"veterinary.list"}]}}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **404 Not Found**
      * ```json
-     *{"message": "No query results for model [App\\Modules\\Role\\Models\\Role] a014efff-69d0-46a4-877f-6b98c428e978"}
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"role":["Must be a valid UUID."],"name":["The name field is required."],"permission_ids":["The permission ids field must be present."]}
+     *{"message":"Validation errors","errors":{"name":["The name field is required."],"permission_ids":["The permission ids field must be present."],"permission_ids.0":["The permission_ids.0 field must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -212,23 +201,15 @@ class RoleApiController extends ApiController
      */
     public function update(UpdateRoleRequest $request, string $id)
     {
-        $roleDTO = new RoleDTO(...$request->validated());
-        $role = $this->service->getRoleById($id);
+        $dto = new RoleDTO(...$request->validated());
 
-        try {
-            DB::beginTransaction();
-            $role = $this->service->updateRole($role->{Role::ID}, $roleDTO);
-            DB::commit();
+        $role = DB::transaction(function () use ($id, $dto) {
+            return $this->service->update($id, $dto);
+        });
 
-            return $this->sendResponse(
-                __('Updated successfully'),
-                (new RoleResource($role)),
-                200
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::successData(
+            new RoleResource($role)
+        );
     }
 
     /**
@@ -247,17 +228,17 @@ class RoleApiController extends ApiController
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **404 Not Found**
      * ```json
-     *{"message": "No query results for model [App\\Modules\\Role\\Models\\Role] a014efff-69d0-46a4-877f-6b98c428e978"}
+     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
      * ```
      *
      * **422 Unprocessable Entity**
      * ```json
-     *{"role":["Must be a valid UUID."]}
+     *{"message":"Validation errors","errors":{"role":["Must be a valid UUID."]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -272,22 +253,13 @@ class RoleApiController extends ApiController
     public function destroy(string $id): JsonResponse
     {
         if (!Str::isUuid($id)) {
-            return $this->sendError422(['role' => [__('Must be a valid UUID.')]]);
+            return ApiResponse::validation(['role' => [__('Must be a valid UUID.')]]);
         }
 
-        $role = $this->service->getRoleById($id);
+        DB::transaction(function () use ($id) {
+            return $this->service->delete($id);
+        });
 
-        try {
-            DB::beginTransaction();
-            $this->service->deleteRole($role->{Role::ID});
-            DB::commit();
-
-            return $this->sendResponse(
-                __('Deleted successfully')
-            );
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $this->sendError500($th->getMessage());
-        }
+        return ApiResponse::success(__('Deleted successfully'));
     }
 }

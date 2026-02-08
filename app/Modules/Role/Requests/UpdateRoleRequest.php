@@ -2,11 +2,9 @@
 
 namespace App\Modules\Role\Requests;
 
-use Illuminate\Support\Str;
 use App\Modules\Role\DTOs\RoleDTO;
 use App\Common\Requests\ApiRequest;
 use App\Modules\Permission\Models\Permission;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Modules\Permission\Repositories\PermissionRepository;
 
 class UpdateRoleRequest extends ApiRequest
@@ -17,14 +15,8 @@ class UpdateRoleRequest extends ApiRequest
     {
         $this->roleId = $this->route('role');
 
-        if (!Str::isUuid($this->roleId)) {
-            throw new HttpResponseException(
-                response()->json(['role' => [__('Must be a valid UUID.')]], 422)
-            );
-        }
-
         return [
-            RoleDTO::NAME => 'required|string|unique:roles,name,' . $this->roleId,
+            RoleDTO::NAME => 'required|string|max:255|unique:roles,name,' . $this->roleId,
             RoleDTO::PERMISSION_IDS => 'present|array',
             RoleDTO::PERMISSION_IDS . '.*' => 'uuid',
         ];
@@ -33,6 +25,8 @@ class UpdateRoleRequest extends ApiRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            $this->validateUuidParam('role', $validator);
+
             if (empty($validator->errors()->all())) {
                 $this->checkPermissions($validator);
             }

@@ -38,6 +38,8 @@ class UserResource extends JsonResource
             'type_document' => $this->{User::TYPE_DOCUMENT},
             'n_document' => $this->{User::N_DOCUMENT},
             'birth_date' => $this->{User::BIRTH_DATE},
+            'designation' => $this->{User::DESIGNATION},
+            'gender' => $this->{User::GENDER},
 
             'roles' => RoleLiteResource::collection($roles),
             'all_permissions' => PermissionResource::collection($permissions->unique(Permission::ID)->values()),

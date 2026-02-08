@@ -2,44 +2,37 @@
 
 namespace App\Common\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use App\Common\DTOs\PagePaginationDTO;
+use App\Common\DTOs\OffsetPaginationDTO;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 
 abstract class ApiController
 {
-    public function sendResponse(string $message = null, $result = null, int $code = 200): JsonResponse
+    public function getMetaPagination($data): array|null
     {
-        $response = [
-            'message' => $message ?? __('Request processed successfully'),
-        ];
+        $meta = null;
 
-        if ($result !== null) {
-            $response['data'] = $result;
+        if ($data instanceof PagePaginationDTO) {
+            $meta = [
+                'current_page'  => $data->currentPage,
+                'per_page'      => $data->perPage,
+                'last_page'     => $data->lastPage,
+                'total'         => $data->total,
+            ];
+        } elseif ($data instanceof OffsetPaginationDTO) {
+            $meta = [
+                'offset'    => $data->offset,
+                'limit'     => $data->limit,
+                'total'     => $data->total,
+            ];
+        } elseif ($data instanceof CursorPaginator) {
+            $meta = [
+                'per_page'    => $data->perPage(),
+                'next_cursor' => optional($data->nextCursor())->encode(),
+                'prev_cursor' => optional($data->previousCursor())->encode(),
+            ];
         }
 
-        return response()->json($response, $code);
-    }
-
-    public function sendError(string $message, int $code): JsonResponse
-    {
-        $response = [
-            'message' => $message,
-        ];
-
-        return response()->json($response, $code);
-    }
-
-    public function sendError500($error): JsonResponse
-    {
-        $response = [
-            'message' => __('Internal Server Error'),
-            'error' => $error
-        ];
-
-        return response()->json($response, 500);
-    }
-
-    public function sendError422(array $errors): JsonResponse
-    {
-        return response()->json($errors, 422);
+        return $meta;
     }
 }

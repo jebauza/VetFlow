@@ -6,9 +6,12 @@ use App\Modules\User\Models\User;
 use Illuminate\Http\UploadedFile;
 use App\Common\Helpers\FileHelper;
 use Illuminate\Support\Facades\Hash;
+use App\Common\DTOs\PagePaginationDTO;
+use App\Common\DTOs\OffsetPaginationDTO;
 use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\User\DTOs\UpdateUserDTO;
 use App\Modules\User\Repositories\UserRepository;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 
 class UserService
 {
@@ -16,22 +19,60 @@ class UserService
         protected readonly UserRepository $userRepo
     ) {}
 
-    public function getUsers(string $search = null)
+    public function all(string $search = null)
     {
-        return $this->userRepo->getBySearch($search, true);
+        return $this->userRepo->search($search, true);
     }
 
-    public function getUserById(string $id): User
+    public function pagePaginate(?string $search = null, int $page = null, int $perPage = null): PagePaginationDTO
     {
-        return $this->userRepo->findOrFail($id, true);
+        $page = $page ?? 1;
+        $perPage = $perPage ?? 100;
+
+        return $this->userRepo->pagination(
+            $this->userRepo->baseSearch($search, true),
+            $page,
+            $perPage,
+        );
     }
 
-    public function createUser(CreateUserDTO $createUserDTO, UploadedFile $avatar = null): User
+    public function offsetPaginate(?string $search, int $offset = null, int $limit = null): OffsetPaginationDTO
     {
-        $createUserDTO->{CreateUserDTO::PASSWORD} = Hash::make($createUserDTO->{CreateUserDTO::PASSWORD});
+        $offset = $offset ?? 0;
+        $limit = $limit ?? 100;
 
-        if ($avatar) {
-            $createUserDTO->{CreateUserDTO::AVATAR} = FileHelper::saveFile(
+        return $this->userRepo->offsetPagination(
+            $this->userRepo->baseSearch($search, true),
+            $offset,
+            $limit
+        );
+    }
+
+    public function cursorPaginate(?string $search, int $perPage = null): CursorPaginator
+    {
+        $perPage = $perPage ?? 100;
+
+        return $this->userRepo->cursorPagination(
+            $this->userRepo->baseSearch($search, true),
+            $perPage
+        );
+    }
+
+    public function findById(string $id): User
+    {
+        /** @var User $user */
+        $user = $this->userRepo->findOrFailWithRelations($id, [
+            'permissions:id,name',
+            'roles.permissions:id,name'
+        ]);
+
+        return $user;
+    }
+
+    public function create(CreateUserDTO $dto): User
+    {
+        if ($avatar = $dto->{CreateUserDTO::AVATAR}) {
+            $dto->{CreateUserDTO::AVATAR} = FileHelper::saveFile(
                 $avatar,
                 User::PATH_FOLDER_AVATARS,
                 'public'
@@ -39,41 +80,43 @@ class UserService
         }
 
         try {
-            $user = $this->userRepo->create($createUserDTO->toArray());
+            $user = $this->userRepo->create($dto->toArray());
 
-            if ($createUserDTO->{CreateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->syncRoleIdsToUser($user, [$createUserDTO->{CreateUserDTO::ROLE_ID}]);
+            // Telescope::store(app('request'));
+
+            if ($dto->{CreateUserDTO::ROLE_ID}) {
+                $user = $this->userRepo->assignRoles($user, [$dto->{CreateUserDTO::ROLE_ID}]);
             }
 
             return $this->userRepo->loadRelations($user, false, true);
         } catch (\Throwable $th) {
-            if ($createUserDTO->{CreateUserDTO::AVATAR}) {
-                FileHelper::deleteFile($createUserDTO->{CreateUserDTO::AVATAR}, 'public');
+            if (is_string($dto->{CreateUserDTO::AVATAR})) {
+                FileHelper::deleteFile($dto->{CreateUserDTO::AVATAR}, 'public');
             }
             throw $th;
         }
     }
 
-    public function updateUser(string $id, UpdateUserDTO $updateUserDTO, ?UploadedFile $avatar): User
+    public function update(string $id, UpdateUserDTO $dto): User
     {
-        $updateUserDTO->{UpdateUserDTO::PASSWORD} = Hash::make($updateUserDTO->{UpdateUserDTO::PASSWORD});
-        $oldAvatar = null;
+        $user = $this->userRepo->findOrFail($id);
 
-        if ($avatar) {
-            $updateUserDTO->{UpdateUserDTO::AVATAR} = FileHelper::saveFile(
+        $oldAvatar = null;
+        if ($avatar = $dto->{UpdateUserDTO::AVATAR}) {
+            $dto->{UpdateUserDTO::AVATAR} = FileHelper::saveFile(
                 $avatar,
                 User::PATH_FOLDER_AVATARS,
                 'public'
             );
 
-            $oldAvatar = $this->userRepo->findOrFail($id)->{User::AVATAR};
+            $oldAvatar = $user->{User::AVATAR};
         }
 
         try {
-            $user = $this->userRepo->update($id, $updateUserDTO->toArray(true));
+            $user = $this->userRepo->update($user, $dto->toArray(true));
 
-            if ($updateUserDTO->{UpdateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->syncRoleIdsToUser($user, [$updateUserDTO->{CreateUserDTO::ROLE_ID}]);
+            if ($dto->{UpdateUserDTO::ROLE_ID}) {
+                $user = $this->userRepo->syncRoles($user, [$dto->{UpdateUserDTO::ROLE_ID}]);
             }
 
             if ($oldAvatar) {
@@ -82,14 +125,14 @@ class UserService
 
             return $this->userRepo->loadRelations($user, false, true);
         } catch (\Throwable $th) {
-            if ($updateUserDTO->{UpdateUserDTO::AVATAR}) {
-                FileHelper::deleteFile($updateUserDTO->{UpdateUserDTO::AVATAR}, 'public');
+            if (is_string($dto->{UpdateUserDTO::AVATAR})) {
+                FileHelper::deleteFile($dto->{UpdateUserDTO::AVATAR}, 'public');
             }
             throw $th;
         }
     }
 
-    public function deleteUser(string $id)
+    public function delete(string $id): void
     {
         $user = $this->userRepo->findOrFail($id);
 

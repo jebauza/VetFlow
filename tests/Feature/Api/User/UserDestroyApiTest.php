@@ -2,69 +2,73 @@
 
 namespace Tests\Feature\Api\User;
 
-use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\Modules\User\Models\User;
+use Tests\Feature\Api\ApiTestCase;
+use Illuminate\Database\Eloquent\Collection;
 use App\Modules\User\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class UserDestroyApiTest extends TestCase
+class UserDestroyApiTest extends ApiTestCase
 {
     use RefreshDatabase;
 
     private $api = 'api/users/:id';
-
+    private string $token;
     protected UserRepository $userRepo;
+    protected Collection $users;
+    protected User $userAuth;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->userRepo = new UserRepository(new User);
+
+        $this->users = User::factory(2)->create();
+        $this->userAuth = $this->users->first();
+        $this->token = $this->getAccessToken($this->userAuth);
+    }
+
+    public function test_destroy_unauthorized_401()
+    {
+        $this->assertEndpointRequiresAuth(
+            self::DELETE,
+            str_replace(':id', $this->userAuth->{User::ID}, $this->api)
+        );
     }
 
     public function test_destroy_200()
     {
-        $user = $this->superAdmin();
-        $token = $this->getAccessToken($user);
-        $userId = $this->userRepo->firstRandom()->{User::ID};
+        $userDeleted = $this->users->last();
 
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->deleteJson(str_replace(':id', $userId, $this->api))
+        $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
+            ->deleteJson(str_replace(':id', $userDeleted->{User::ID}, $this->api))
             ->assertOk()
-            ->assertJson([
-                'message' => __('Deleted successfully'),
-            ]);
+            ->assertJson(['message' => __('Deleted successfully')]);
+
+        $this->assertSoftDeleted($userDeleted);
     }
 
-    public function test_destroy_with_invalid_token_401()
+    public function test_destroy_404()
     {
-        $this->withHeaders(['Authorization' => 'Bearer invalid_token',])
-            ->deleteJson($this->api)
-            ->assertStatus(401)
-            ->assertJson([
-                'message' => 'Unauthenticated.',
-            ]);
+        $this->assertEndpointReturnsNotFound(
+            self::DELETE,
+            str_replace(':id', Str::uuid(), $this->api),
+            [],
+            $this->token
+        );
     }
 
-    public function test_destroy_validation_422()
+    public function test_destroy_validation_422(): void
     {
-        $user = $this->superAdmin();
-        $token = $this->getAccessToken($user);
-
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->getJson($this->api)
+        // Data user_id invalid UUID and required fields
+        $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
+            ->deleteJson(str_replace(':id', 'invalid-uuid', $this->api))
             ->assertStatus(422)
-            ->assertJsonStructure(['user']);
-    }
-
-    public function test_destroy_user_id_not_found_404()
-    {
-        $user = $this->superAdmin();
-        $token = $this->getAccessToken($user);
-
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->getJson(str_replace(':id', Str::uuid()->toString(), $this->api))
-            ->assertStatus(404)
-            ->assertJsonStructure(['message']);
+            ->assertJsonPath('message', __('Validation errors'))
+            ->assertJsonStructure([
+                'message',
+                'errors' => ['user'],
+            ]);
     }
 }

@@ -5,7 +5,6 @@ namespace App\Modules\User\Repositories;
 use App\Modules\User\Models\User;
 use App\Common\Helpers\UuidHelper;
 use Illuminate\Support\Facades\Hash;
-use App\Modules\User\DTOs\UpdateUserDTO;
 use Illuminate\Database\Eloquent\Builder;
 use App\Common\Repositories\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,22 +16,7 @@ class UserRepository extends BaseRepository
         parent::__construct($model);
     }
 
-    public function findOrFail(string $id, bool $withRelations = false): User
-    {
-        return User::when($withRelations, function (Builder $q) {
-            $q->with([
-                'permissions:id,name',
-                'roles.permissions:id,name'
-            ]);
-        })->findOrFail($id);
-    }
-
-    public function findOneBy(string $column, string $value): User
-    {
-        return User::firstWhere($column, $value);
-    }
-
-    public function getBySearch(?string $search, bool $withRelations = false): Collection
+    public function baseSearch(?string $search = null, bool|array $relations = false): Builder
     {
         return User::withoutSuperAdmin()
             ->when(filled($search), function (Builder $q) use ($search) {
@@ -41,32 +25,35 @@ class UserRepository extends BaseRepository
                     ->orWhere(User::EMAIL, 'ILIKE', "%{$search}%")
                     ->orWhere(User::N_DOCUMENT, 'ILIKE', "%{$search}%");
             })
-            ->when($withRelations, function (Builder $q) {
-                $q->with([
-                    'permissions:id,name',
-                    'roles.permissions:id,name'
-                ]);
+            ->when($relations, function (Builder $q) use ($relations) {
+                if (is_array($relations)) {
+                    $q->with($relations);
+                } else {
+
+                    $q->with([
+                        'permissions:id,name',
+                        'roles.permissions:id,name'
+                    ]);
+                }
             })
-            ->orderByRaw('LOWER( CONCAT(' . User::NAME . ',' . User::SURNAME . ') ) ASC')
-            ->get();
+            // ->orderByRaw('LOWER( CONCAT(' . User::NAME . ',' . User::SURNAME . ') ) ASC')
+            ->orderBy(User::TABLE . '.' . User::NAME)
+            ->orderBy(User::TABLE . '.' . User::SURNAME);
     }
 
-    public function update(string $id, array $updateUserDTO): User
+    public function search(?string $search, bool|array $relations = false): Collection
     {
-        $user = User::updateOrCreate(
-            [
-                User::ID => $id
-            ],
-            [
-                User::NAME => $updateUserDTO[UpdateUserDTO::NAME],
-                User::SURNAME => $updateUserDTO[UpdateUserDTO::SURNAME],
-                User::EMAIL => $updateUserDTO[UpdateUserDTO::EMAIL],
-                User::PASSWORD => $updateUserDTO[UpdateUserDTO::PASSWORD],
-                User::AVATAR => $updateUserDTO[UpdateUserDTO::AVATAR],
-            ]
-        );
+        return $this->baseSearch($search, $relations)->get();
+    }
 
-        return $user;
+    public function searchCount(?string $search, bool|array $relations = false): int
+    {
+        return $this->baseSearch($search, $relations)->count();
+    }
+
+    public function findOneBy(string $column, string $value): User
+    {
+        return User::firstWhere($column, $value);
     }
 
     /**
@@ -118,48 +105,93 @@ class UserRepository extends BaseRepository
     }
 
     /**
-     * Synchronize permissions for a given user.
-     * Any existing permissions not in the provided array will be removed, and new ones will be added.
+     * Assigns an array of permissions to a user.
      *
-     * @param User $user The user model to sync permissions for.
-     * @param array $permissionIds An array of permission IDs to assign to the user.
-     * @return User The refreshed user model with updated permissions.
+     * This method can accept either a User object directly or a string representing the user's ID.
+     * If a string ID is provided, the user is first retrieved from the database.
+     * The permissions are then assigned to the user using the `givePermissionTo` method.
+     *
+     * @param User|string $user The User model instance or the ID of the user to assign permissions to.
+     * @param array<int, string> $permissionIds An array of permission IDs (integers or strings) to be assigned.
+     * @return User The User model instance with the assigned permissions.
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the user with the given ID is not found.
      */
-    public function syncPermissionIdsToUser(User $user, array $permissionIds): User
+    public function assignPermissions(User|string $user, array $permissionIds): User
     {
+        if (is_string($user)) {
+            $user = $this->findOrFail($user);
+        }
+
+        $user->givePermissionTo($permissionIds);
+
+        return $user;
+    }
+
+    /**
+     * Synchronizes the permissions for a given user.
+     *
+     * This method accepts either a User model instance or a user ID (string).
+     * If a string is provided, it attempts to find the user by that ID.
+     * It then syncs the provided permission IDs to the user and reloads the user with its updated permissions.
+     *
+     * @param User|string $user The user object or the ID of the user whose permissions are to be synchronized.
+     * @param array<int, string> $permissionIds An array of permission IDs to synchronize with the the user.
+     * @return User
+     */
+    public function syncPermissions(User|string $user, array $permissionIds): User
+    {
+        if (is_string($user)) {
+            $user = $this->findOrFail($user);
+        }
+
         $user->syncPermissions($permissionIds);
 
-        return $user->load('permissions:id,name');
+        return $user;
     }
 
     /**
-     * Synchronize roles for a given user.
-     * Any existing roles not in the provided array will be removed, and new ones will be added.
+     * Assigns one or more roles to a user.
      *
-     * @param User $user The user model to sync roles for.
-     * @param array $roleIds An array of role IDs to assign to the user.
-     * @return User The refreshed user model with updated roles.
-     */
-    public function syncRoleIdsToUser(User $user, array $roleIds): User
-    {
-        $user->syncRoles($roleIds);
-
-        return $user->load('roles:id,name');
-    }
-
-    /**
-     * Assign one or more roles to a user.
-     * This method adds roles without detaching existing ones.
+     * This method accepts either a User model instance or a user ID string.
+     * It assigns the specified roles to the user and then reloads the user
+     * with their updated roles (containing only 'id' and 'name' fields).
      *
-     * @param User $user The user model to assign roles to.
-     * @param array $roleIds An array of role IDs to assign.
-     * @return User The refreshed user model with assigned roles.
+     * @param User|string $user The user model instance or the ID of the user to assign roles to.
+     * @param array<int, string> $roleIds An array of role IDs to assign to the user.
+     * @return User
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If a user with the given ID is not found.
      */
-    public function assignRoles(User $user, array $roleIds): User
+    public function assignRoles(User|string $user, array $roleIds): User
     {
+        if (is_string($user)) {
+            $user = $this->findOrFail($user);
+        }
+
         $user->assignRole($roleIds);
 
-        return $user->load('roles:id,name');
+        return $user;
+    }
+
+    /**
+     * Synchronizes roles for a given user.
+     *
+     * This method can accept either a User model instance or a user ID string.
+     * If a string ID is provided, it will attempt to find the user first.
+     *
+     * @param User|string $user The User model instance or the ID of the user.
+     * @param array<int, string> $roleIds An array of role IDs to synchronize with the user.
+     * @return User
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If a user with the given ID is not found.
+     */
+    public function syncRoles(User|string $user, array $roleIds): User
+    {
+        if (is_string($user)) {
+            $user = $this->findOrFail($user);
+        }
+
+        $user->syncRoles($roleIds);
+
+        return $user;
     }
 
     public function getAllPermissions(User $user): Collection

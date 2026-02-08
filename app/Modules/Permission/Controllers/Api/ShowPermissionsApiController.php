@@ -2,6 +2,8 @@
 
 namespace App\Modules\Permission\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
+use App\Common\Responses\ApiResponse;
 use App\Common\Controllers\ApiController;
 use App\Modules\Permission\Services\PermissionService;
 use App\Modules\Permission\Resources\PermissionResource;
@@ -19,12 +21,12 @@ class ShowPermissionsApiController extends ApiController
      *
      * **200 OK**
      * ```json
-     *{"message":"Request processed successfully","data":[{"id":"a0150e1c-6a44-4fda-8945-31ba48d63de5","name":"superadmin"},{"id":"a0150e1c-6d3d-44af-b36b-4468fc4f8541","name":"admin"},{"id":"a0150e1c-6e2f-4ff2-929e-42779e172481","name":"register_role"}]}
+     *{"message":"OK","data":[{"id":"a1000f18-4d8c-43e6-abd4-de01a7184dd0","name":"admin"},{"id":"a1000f18-5050-4625-8c87-a306916c446a","name":"role.register"}]}
      * ```
      *
      * **401 Unauthorized**
      * ```json
-     *{"message":"Unauthenticated."}
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
      * **500 Internal Server Error**
@@ -36,11 +38,10 @@ class ShowPermissionsApiController extends ApiController
      *
      * @LRDresponses 200|401|500
      */
-    public function __invoke(PermissionService $service)
+    public function __invoke(PermissionService $service): JsonResponse
     {
-        return $this->sendResponse(
-            null,
-            PermissionResource::collection($service->getPermissions())
+        return ApiResponse::successData(
+            PermissionResource::collection($service->getPermissions()),
         );
     }
 }

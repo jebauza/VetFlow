@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Api\User;
 
-use Tests\TestCase;
+use Tests\Feature\Api\ApiTestCase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Modules\Role\Models\Role;
@@ -14,16 +14,15 @@ use App\Modules\Role\Repositories\RoleRepository;
 use App\Modules\User\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class UserStoreApiTest extends TestCase
+class UserStoreApiTest extends ApiTestCase
 {
     use RefreshDatabase;
 
     private $api = 'api/users';
-
+    private string $token;
+    private array $payload = [];
     protected UserRepository $userRepo;
     protected RoleRepository $roleRepo;
-    private array $safeValues = [];
-
 
     protected function setUp(): void
     {
@@ -33,9 +32,8 @@ class UserStoreApiTest extends TestCase
 
         Storage::fake('public');
         $avatar = UploadedFile::fake()->create('avatar.jpg', 200, 'image/jpeg');
-        $roleId = $this->roleRepo->firstRandom()->{Role::ID};
 
-        $this->safeValues = [
+        $this->payload = [
             "email" => "user@test.com",
             "name" => "Name Test",
             "surname" => "Surname Test",
@@ -47,117 +45,152 @@ class UserStoreApiTest extends TestCase
             "birth_date" => '1990-01-01',
             "designation" => Str::random(255),
             "gender" => Arr::random(User::GENDER_VALUES),
-            "role_id" => $roleId,
+            "role_id" => $this->roleRepo->random()->{Role::ID},
         ];
+        $this->token = $this->getAccessToken(User::factory()->create());
+    }
+
+    public function test_store_unauthorized_401()
+    {
+        $this->assertEndpointRequiresAuth(self::POST, $this->api, $this->payload);
     }
 
     public function test_store_201()
     {
-        $user = $this->superAdmin();
-        $token = $this->getAccessToken($user);
-
-        $response = $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->postJson($this->api, $this->safeValues);
-
-        if ($userId = $response->json('data.id')) {
-            $user = $this->userRepo->findWithRelations($userId, ['permissions:id,name', 'roles:id,name']);
-            $storeData = json_decode((new UserResource($user))->toJson(), true);
-        }
-
-        $response->assertCreated()
+        $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
+            ->postJson($this->api, $this->payload)
+            ->assertCreated()
             ->assertJsonStructure([
                 'message',
-                'data',
-            ]);
+                'data' => [
+                    'id',
+                    'name',
+                    'surname',
+                    'email',
+                    'avatar',
+                    'phone',
+                    'type_document',
+                    'n_document',
+                    'birth_date',
+                    'designation',
+                    'gender',
+                    'roles' => [
+                        '*' => [
+                            'id',
+                            'name',
+                        ]
+                    ],
+                    'all_permissions' => [
+                        '*' => [
+                            'id',
+                            'name',
+                        ]
+                    ]
+                ]
+            ])
+            ->assertJsonPath('message', __('Created'))
+            ->assertJsonPath('data.name', $this->payload['name'])
+            ->assertJsonPath('data.surname', $this->payload['surname'])
+            ->assertJsonPath('data.email', $this->payload['email']);
 
-        if (isset($storeData)) {
-            $response->assertJson([
-                'message' => 'Created successfully',
-                'data' => $storeData
-            ]);
+        $this->assertDatabaseHas(User::TABLE, [
+            User::ID => $response->json('data.id'),
+            User::EMAIL => $this->payload['email'],
+            User::NAME => $this->payload['name'],
+            User::SURNAME => $this->payload['surname'],
+            User::PHONE => $this->payload['phone'],
+            User::TYPE_DOCUMENT => $this->payload['type_document'],
+            User::N_DOCUMENT => $this->payload['n_document'],
+            User::BIRTH_DATE => $this->payload['birth_date'],
+            User::DESIGNATION => $this->payload['designation'],
+            User::GENDER => $this->payload['gender'],
+        ]);
 
-            $this->assertTrue(Storage::disk('public')->exists($user->{User::AVATAR}));
-        }
-    }
+        $this->assertDatabaseMissing(User::TABLE, [
+            User::EMAIL => $this->payload['email'],
+            User::PASSWORD => $this->payload['password'], // Password should be hashed, so the raw value must not exist in DB
+        ]);
 
-    public function test_store_with_invalid_token_401()
-    {
-        $this->withHeaders([
-            'Authorization' => 'Bearer invalid_token',
-        ])->postJson($this->api)
-            ->assertStatus(401)
-            ->assertJson([
-                'message' => 'Unauthenticated.',
-            ]);
+        $user = $this->userRepo->findWithRelations(
+            $response->json('data.id'),
+            ['permissions:id,name', 'roles:id,name']
+        );
+
+        $this->assertTrue(Storage::disk('public')->exists($user->{User::AVATAR}));
+        $this->assertEqualsCanonicalizing(
+            [$this->payload['role_id']],
+            $user->roles->pluck(Role::ID)->toArray()
+        );
+
+        $data = json_decode((new UserResource($user))->toJson(), true);
+        $response->assertJsonPath('data', $data);
     }
 
     public function test_store_validation_422()
     {
-        $user = $this->superAdmin();
-        $token = $this->getAccessToken($user);
-
         // Data required
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
+        $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->postJson($this->api)
             ->assertStatus(422)
+            ->assertJsonPath('message', __('Validation errors'))
             ->assertJsonStructure([
-                'email',
-                'name',
-                'surname',
-                'password',
+                'message',
+                'errors' => ['email', 'name', 'surname', 'password'],
             ]);
 
         // Data not valid
         $avatarInvalid = UploadedFile::fake()->create('archivo.pdf', 200);
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->postJson($this->api, [
-                "email" => "invalid_email",
-                "name" => Str::random(300),
-                "surname" => Str::random(300),
-                "password" => "short",
-                "avatar" => $avatarInvalid,
-                "phone" => Str::random(30),
-                "type_document" => 'invalid_type_document',
-                "n_document" => Str::random(30),
-                "birth_date" => Str::random(10),
-                "designation" => Str::random(300),
-                "gender" => 'invalid_gender',
-                "role_id" => 'invalid_uuid',
-            ])
+        $this->postJson($this->api, [
+            "email" => "invalid_email",
+            "name" => Str::random(300),
+            "surname" => Str::random(300),
+            "password" => "short",
+            "avatar" => $avatarInvalid,
+            "phone" => Str::random(30),
+            "type_document" => 'invalid_type_document',
+            "n_document" => Str::random(30),
+            "birth_date" => Str::random(10),
+            "designation" => Str::random(300),
+            "gender" => 'invalid_gender',
+            "role_id" => 'invalid_uuid',
+        ])
             ->assertStatus(422)
             ->assertJsonStructure([
-                'email',
-                'name',
-                'surname',
-                'password',
-                "avatar",
-                "phone",
-                "type_document",
-                "n_document",
-                "birth_date",
-                "designation",
-                "gender",
-                "role_id",
+                'message',
+                'errors' => [
+                    'email',
+                    'name',
+                    'surname',
+                    'password',
+                    "avatar",
+                    "phone",
+                    "type_document",
+                    "n_document",
+                    "birth_date",
+                    "designation",
+                    "gender",
+                    "role_id",
+                ],
             ]);
 
         // Data valid but unique email
-        $data = $this->safeValues;
-        $data['email'] = $this->userRepo->firstRandom()->{User::EMAIL};
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->postJson($this->api, $data)
+        $data = $this->payload;
+        $data['email'] = $this->userRepo->random()->{User::EMAIL};
+        $this->postJson($this->api, $data)
             ->assertStatus(422)
             ->assertJsonStructure([
-                'email',
+                'message',
+                'errors' => ['email'],
             ]);
 
         // Invalid DB role_id
-        $data = $this->safeValues;
+        $data = $this->payload;
         $data['role_id'] = Str::uuid()->toString();
-        $this->withHeaders(['Authorization' => "Bearer {$token}",])
-            ->postJson($this->api, $data)
+        $this->postJson($this->api, $data)
             ->assertStatus(422)
             ->assertJsonStructure([
-                'role_id',
+                'message',
+                'errors' => ['role_id'],
             ]);
     }
 }
