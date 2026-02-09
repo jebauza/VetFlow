@@ -3,9 +3,7 @@
 namespace App\Modules\User\Services;
 
 use App\Modules\User\Models\User;
-use Illuminate\Http\UploadedFile;
 use App\Common\Helpers\FileHelper;
-use Illuminate\Support\Facades\Hash;
 use App\Common\DTOs\PagePaginationDTO;
 use App\Common\DTOs\OffsetPaginationDTO;
 use App\Modules\User\DTOs\CreateUserDTO;

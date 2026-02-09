@@ -46,6 +46,11 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **500 Internal Server Error**
      * ```json
      *{"message":"Internal Server Error"}
@@ -53,7 +58,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|500
+     * @LRDresponses 200|401|403|500
      */
     public function index(Request $request): JsonResponse
     {
@@ -90,6 +95,11 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **422 Unprocessable Entity**
      * ```json
      *{"message":"Validation errors","errors":{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}}
@@ -102,7 +112,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 201|401|422|500
+     * @LRDresponses 201|401|403|422|500
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
@@ -134,9 +144,14 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -151,7 +166,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function show(string $id): JsonResponse
     {
@@ -185,9 +200,15 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
+     * ```
      *
      * **422 Unprocessable Entity**
      * ```json
@@ -201,7 +222,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function update(UpdateUserRequest $request, string $id)
     {
@@ -235,9 +256,14 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -252,7 +278,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function destroy(string $id)
     {

@@ -37,6 +37,7 @@ Route::middleware('api')->group(function () {
             Route::get('/users/{user}/download/avatar', [UserDownloadController::class, 'avatar'])
                 ->withoutMiddleware(['auth:api'])->name('users.download.avatar');
 
+            // Route::post('/users/{user}', [UserApiController::class, 'update'])->name('users.update');
             Route::apiResource('users', UserApiController::class);
         });
     });

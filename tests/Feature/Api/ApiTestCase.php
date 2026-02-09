@@ -65,10 +65,7 @@ abstract class ApiTestCase extends BaseTestCase
         ])
             ->assertNotFound()
             ->assertJson([
-                'message' => __('Not Found'),
-                'errors' => [
-                    'resource' => [__('The requested resource does not exist')],
-                ],
+                'message' => __('The requested resource does not exist'),
             ]);
     }
 

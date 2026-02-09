@@ -28,7 +28,7 @@ class RoleStoreApiTest extends ApiTestCase
         $this->permissionRepo = new PermissionRepository(new Permission);
         $this->roleRepo = new RoleRepository(new Role);
 
-        $userAuth = User::factory()->create();
+        $userAuth = $this->superAdmin();
         $this->token = $this->getAccessToken($userAuth);
         $this->payload = [
             "name" => "Role Test",

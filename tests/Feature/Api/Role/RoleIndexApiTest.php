@@ -22,7 +22,7 @@ class RoleIndexApiTest extends ApiTestCase
         parent::setUp();
         $this->roleRepo = new RoleRepository(new Role);
 
-        $userAuth = User::factory()->create();
+        $userAuth = $this->superAdmin();
         $this->token = $this->getAccessToken($userAuth);
     }
 

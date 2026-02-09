@@ -41,7 +41,7 @@ class UserFakeSeeder extends Seeder
             });
         });
 
-        $permissions->chunk($permissions->count() / $rolesCount)->each(function ($chunkOfPermissions, $index) use ($permissionRepo, $roles) {
+        $permissions->chunk(ceil($permissions->count() / $rolesCount))->each(function ($chunkOfPermissions, $index) use ($permissionRepo, $roles) {
             $chunkOfPermissions->each(function (Permission $permission) use ($permissionRepo, $roles, $index) {
                 $permissionRepo->assignRoles($permission, [$roles[$index]->{Role::ID}]);
             });

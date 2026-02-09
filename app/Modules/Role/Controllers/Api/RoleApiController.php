@@ -131,7 +131,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -182,7 +182,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -233,7 +233,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
