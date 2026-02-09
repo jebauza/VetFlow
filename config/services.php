@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'review_pro' => [
+        'api_key' => env('REVIEW_PRO_API_KEY', '')
+    ],
+
+    'push_tech' => [
+        'api_token' => env('PUSHTECH_API_TOKEN', ''),
+        'account_id' => env('PUSHTECH_ACCOUNT_ID', '')
+    ],
+
+    'my_lighthouse' => [
+        'url' => 'https://api.mylighthouse.com/v3',
+        'header' => env('MY_LIGHTHOUSE_HEADER', ''),
+        'token' => env('MY_LIGHTHOUSE_TOKEN', ''),
+    ],
+
 ];
