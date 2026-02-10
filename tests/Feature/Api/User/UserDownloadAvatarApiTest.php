@@ -13,7 +13,7 @@ class UserDownloadAvatarApiTest extends ApiTestCase
 
     private $api = 'api/users/:id/download/avatar';
 
-    public function test_download_avatar_200()
+    public function test_download_avatar_ok_200()
     {
         $user = User::whereNotNull(User::AVATAR)->first();
 
@@ -25,7 +25,7 @@ class UserDownloadAvatarApiTest extends ApiTestCase
         }
     }
 
-    public function test_download_avatar_404()
+    public function test_download_avatar_not_found_404()
     {
         $this->assertEndpointReturnsNotFound(
             self::GET,

@@ -35,7 +35,7 @@ class UserOffsetPaginateApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_offset_paginate_200()
+    public function test_offset_paginate_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->getJson($this->api)
@@ -96,7 +96,7 @@ class UserOffsetPaginateApiTest extends ApiTestCase
             ]);
     }
 
-    public function test_offset_paginate_search_200()
+    public function test_offset_paginate_search_ok_200()
     {
         $search = 'a';
         $query = http_build_query([

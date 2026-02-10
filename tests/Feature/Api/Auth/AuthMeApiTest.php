@@ -30,7 +30,7 @@ class AuthMeApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_me_200()
+    public function test_me_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->getJson($this->api)

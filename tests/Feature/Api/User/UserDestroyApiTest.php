@@ -37,7 +37,7 @@ class UserDestroyApiTest extends ApiTestCase
         );
     }
 
-    public function test_destroy_200()
+    public function test_destroy_ok_200()
     {
         $userDeleted = $this->users->last();
 
@@ -49,12 +49,11 @@ class UserDestroyApiTest extends ApiTestCase
         $this->assertSoftDeleted($userDeleted);
     }
 
-    public function test_destroy_404()
+    public function test_destroy_not_found_404()
     {
         $this->assertEndpointReturnsNotFound(
             self::DELETE,
             str_replace(':id', Str::uuid(), $this->api),
-            [],
             $this->token
         );
     }

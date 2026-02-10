@@ -36,7 +36,7 @@ class RoleService
     {
         Gate::authorize(Role::PERMISSION_SHOW);
 
-        /** @var Role $role */
+        /** @var Role */
         $role = $this->roleRepo->findOrFailWithRelations($id, ['permissions']);
 
         return $role;

@@ -28,7 +28,7 @@ class AuthLogoutApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::POST, $this->api);
     }
 
-    public function test_logout_200()
+    public function test_logout_ok_200()
     {
         $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->postJson($this->api)

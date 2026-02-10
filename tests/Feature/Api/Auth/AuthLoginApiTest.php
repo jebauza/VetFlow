@@ -29,7 +29,7 @@ class AuthLoginApiTest extends ApiTestCase
         ];
     }
 
-    public function test_login_200(): void
+    public function test_login_ok_200(): void
     {
         $this->postJson($this->api, $this->payload)
             ->assertStatus(200)

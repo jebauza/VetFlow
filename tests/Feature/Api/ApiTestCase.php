@@ -58,14 +58,27 @@ abstract class ApiTestCase extends BaseTestCase
             ]);
     }
 
-    protected function assertEndpointReturnsNotFound(string $method, string $api, array $data = [], string $token = ''): void
+    protected function assertEndpointReturnsNotFound(string $method, string $api, string $token = '', array $data = []): void
     {
-        $response = $this->json(strtoupper($method), $api, $data, [
+        $this->json(strtoupper($method), $api, $data, [
             'Authorization' => "Bearer {$token}",
         ])
             ->assertNotFound()
             ->assertJson([
                 'message' => __('The requested resource does not exist'),
+            ]);
+    }
+
+    protected function assertEndpointReturnsForbidden(string $method, string $api, string $token = null, array $data = []): void
+    {
+        $token = $token ?? $this->getAccessToken(User::factory()->create());
+
+        $this->json(strtoupper($method), $api, $data, [
+            'Authorization' => "Bearer {$token}",
+        ])
+            ->assertForbidden()
+            ->assertJson([
+                'message' => __('You do not have permission to access this resource'),
             ]);
     }
 

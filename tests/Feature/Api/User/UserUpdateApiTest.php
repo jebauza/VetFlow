@@ -60,7 +60,7 @@ class UserUpdateApiTest extends ApiTestCase
         );
     }
 
-    public function test_update_200()
+    public function test_update_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->putJson(
@@ -152,13 +152,13 @@ class UserUpdateApiTest extends ApiTestCase
         $this->assertTrue(Storage::disk('public')->exists($user->{User::AVATAR}));
     }
 
-    public function test_update_404()
+    public function test_update_not_found_404()
     {
         $this->assertEndpointReturnsNotFound(
             self::PUT,
             str_replace(':id', Str::uuid(), $this->api),
+            $this->token,
             $this->payload,
-            $this->token
         );
     }
 

@@ -31,7 +31,7 @@ class RoleIndexApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_index_200()
+    public function test_index_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->getJson($this->api)
@@ -61,7 +61,7 @@ class RoleIndexApiTest extends ApiTestCase
             ->assertJsonPath('data', $data);
     }
 
-    public function test_index_search_200()
+    public function test_index_search_ok_200()
     {
         $names = $this->roleRepo->queryAll()->pluck(Role::NAME)->toArray();
         $dataString = $this->getMostRepeatedSubstring($names, 2);
