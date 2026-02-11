@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\Auth\Controllers\Api\AuthController;
 use App\Modules\Role\Controllers\Api\RoleApiController;
 use App\Modules\User\Controllers\Api\UserApiController;
+use App\Modules\Schedule\Controllers\ScheduleApiController;
 use App\Modules\User\Controllers\Api\UserDownloadController;
 use App\Modules\User\Controllers\Api\UserPaginateApiController;
 use App\Modules\Permission\Controllers\Api\ShowPermissionsApiController;
@@ -39,6 +40,13 @@ Route::middleware('api')->group(function () {
 
             // Route::post('/users/{user}', [UserApiController::class, 'update'])->name('users.update');
             Route::apiResource('users', UserApiController::class);
+        });
+
+        // Schedules routes
+        Route::name('')->group(function () {
+            Route::get('/schedules/config', [ScheduleApiController::class, 'config'])->name('schedules.config');
+
+            Route::apiResource('schedules', ScheduleApiController::class);
         });
     });
 });
