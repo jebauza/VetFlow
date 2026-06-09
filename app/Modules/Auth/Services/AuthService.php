@@ -2,14 +2,16 @@
 
 namespace App\Modules\Auth\Services;
 
-use App\Modules\User\Models\User;
-use Illuminate\Support\Facades\Auth;
-use App\Modules\Auth\DTOs\AuthTokenDTO;
-use App\Modules\User\DTOs\CreateUserDTO;
-use App\Modules\User\Services\UserService;
-use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
-use App\Modules\User\Repositories\UserRepository;
+use App\Modules\Auth\DTOs\Inputs\LoginInputDTO;
+use App\Modules\Auth\DTOs\Outputs\AuthTokenDTO;
 use App\Modules\Auth\Exceptions\LoginFailedException;
+use App\Modules\User\DTOs\CreateUserDTO;
+use App\Modules\User\Models\User;
+use App\Modules\User\Repositories\UserRepository;
+use App\Modules\User\Services\UserService;
+use Illuminate\Support\Facades\Auth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use PHPOpenSourceSaver\JWTAuth\Token;
 
 class AuthService
 {
@@ -26,8 +28,10 @@ class AuthService
         return new AuthTokenDTO($token, $user);
     }
 
-    public function login(array $credentials): AuthTokenDTO
+    public function login(LoginInputDTO $dto): AuthTokenDTO
     {
+        $credentials = $dto->toArray();
+
         if (!$token = JWTAuth::attempt($credentials) /* !$token = Auth::attempt($credentials) */) {
             throw new LoginFailedException(__('auth.failed'));
         }
@@ -35,26 +39,22 @@ class AuthService
         return new AuthTokenDTO($token, Auth::user());
     }
 
-    public function me(): User
+    public function me(string $userId): User
     {
-        $user = $this->userRepo->findOrFail(
-            Auth::user()->{User::ID},
-            true
-        );
-
-        return $user;
+        return $this->userRepo->findOrFail($userId);
     }
 
-    public function refresh(): AuthTokenDTO
+    public function refresh(Token $token): AuthTokenDTO
     {
-        $token = Auth::refresh();
+        $newToken = JWTAuth::refresh($token);
+        $user = JWTAuth::setToken($newToken)->toUser();
 
-        return new AuthTokenDTO($token, Auth::user());
+        return new AuthTokenDTO($newToken, $user);
     }
 
-    public function logout(): void
+    public function logout(Token $token): void
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        JWTAuth::invalidate($token);
         // Auth::logout();
     }
 }

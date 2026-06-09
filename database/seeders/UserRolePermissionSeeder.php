@@ -49,7 +49,7 @@ class UserRolePermissionSeeder extends Seeder
         $allRoles = $roleRepo->all();
 
 
-        // // Create users
+        // Create users
         $configUsers = config('vetflow.users');
         $userRepo = app(UserRepository::class);
         $userRepo->deleteAllExcept(User::EMAIL, array_column($configUsers, 'email'));

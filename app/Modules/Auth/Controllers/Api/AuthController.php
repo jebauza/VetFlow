@@ -2,19 +2,19 @@
 
 namespace App\Modules\Auth\Controllers\Api;
 
-use Illuminate\Http\Request;
-use App\Modules\User\Models\User;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Common\Responses\ApiResponse;
-use App\Modules\Auth\DTOs\AuthTokenDTO;
-use App\Modules\User\DTOs\CreateUserDTO;
 use App\Common\Controllers\ApiController;
-use App\Modules\Auth\Services\AuthService;
+use App\Common\Responses\ApiResponse;
+use App\Modules\Auth\DTOs\Inputs\LoginInputDTO;
+use App\Modules\Auth\DTOs\Outputs\AuthTokenDTO;
 use App\Modules\Auth\Requests\LoginRequest;
 use App\Modules\Auth\Requests\RegisterRequest;
+use App\Modules\Auth\Services\AuthService;
+use App\Modules\User\DTOs\CreateUserDTO;
+use App\Modules\User\Models\User;
 use App\Modules\User\Resources\UserResource;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends ApiController
 {
@@ -55,9 +55,7 @@ class AuthController extends ApiController
     {
         $dto = CreateUserDTO::fromRequest($request);
 
-        DB::beginTransaction();
         $authDto = $this->authService->register($dto);
-        DB::commit();
 
         return ApiResponse::created(
             $this->buildTokenResponse($authDto),
@@ -102,7 +100,9 @@ class AuthController extends ApiController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $authDTO = $this->authService->login($request->validated());
+        $dto = LoginInputDTO::fromArray($request->validated());
+
+        $authDTO = $this->authService->login($dto);
 
         return ApiResponse::success(
             __('Login successful'),
@@ -145,7 +145,7 @@ class AuthController extends ApiController
      */
     public function me(): JsonResponse
     {
-        $user = $this->authService->me();
+        $user = $this->authService->me(Auth::user()->{User::ID});
 
         return ApiResponse::successData(
             new UserResource($user)
@@ -187,7 +187,7 @@ class AuthController extends ApiController
      */
     public function refresh(): JsonResponse
     {
-        $authDTO = $this->authService->refresh();
+        $authDTO = $this->authService->refresh(JWTAuth::getToken());
 
         return ApiResponse::successData(
             $this->buildTokenResponse($authDTO)
@@ -229,7 +229,7 @@ class AuthController extends ApiController
      */
     public function logout(): JsonResponse
     {
-        $this->authService->logout();
+        $this->authService->logout(JWTAuth::getToken());
 
         return ApiResponse::success(
             __('Successfully logged out')

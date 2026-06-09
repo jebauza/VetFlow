@@ -3,7 +3,6 @@
 namespace App\Modules\Schedule\Controllers;
 
 use Illuminate\Http\Request;
-use App\Modules\User\Models\User;
 use App\Common\Responses\ApiResponse;
 use App\Common\Controllers\ApiController;
 use App\Modules\Schedule\Resources\ConfigResource;

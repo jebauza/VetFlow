@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Auth\DTOs;
+namespace App\Modules\Auth\DTOs\Outputs;
 
 use App\Modules\User\Models\User;
 
