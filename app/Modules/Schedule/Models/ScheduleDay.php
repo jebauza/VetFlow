@@ -13,16 +13,16 @@ class ScheduleDay extends Model
 {
     use HasUuids;
 
-    const TABLE = 'schedule_days';
+    public const TABLE = 'schedule_days';
 
     protected $table = self::TABLE;
-    protected $primaryKey = self::ID; // Or your UUID column name
+    protected $primaryKey = self::ID;
     public $incrementing = false;
-    protected $keyType = 'string'; // UUIDs are strings
+    protected $keyType = 'string';
 
-    const ID = 'id';
-    const USER_ID = 'user_id';
-    const DATE = 'date';
+    public const ID = 'id';
+    public const USER_ID = 'user_id';
+    public const DATE = 'date';
 
     protected $fillable = [self::USER_ID, self::DATE];
     protected $casts = [self::DATE => 'date:Y-m-d'];
@@ -37,11 +37,11 @@ class ScheduleDay extends Model
     {
         return $this->belongsToMany(
             ScheduleHour::class,
-            'schedule_day_hour',
-            'schedule_day_id',
-            'schedule_hour_id'
+            ScheduleDayHour::TABLE,
+            ScheduleDayHour::SCHEDULE_DAY_ID,
+            ScheduleDayHour::SCHEDULE_HOUR_ID
         )
-            ->withPivot('created_at', 'updated_at')
+            ->using(ScheduleDayHour::class)
             ->withTimestamps();
     }
 }

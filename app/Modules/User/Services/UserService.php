@@ -137,7 +137,9 @@ class UserService
     {
         $user = $this->userRepo->findOrFail($id);
 
-        $this->userRepo->delete($user->{User::ID});
+        DB::transaction(function () use ($user) {
+            $this->userRepo->delete($user->{User::ID});
+        });
 
         if ($user->{User::AVATAR}) {
             FileHelper::deleteFile($user->{User::AVATAR}, 'public');

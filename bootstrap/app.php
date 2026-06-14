@@ -29,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-
         $exceptions->renderable(function (AuthenticationException|LoginFailedException $e, $request) {
             if ($request->is('api/*')) {
                 $errors = ['auth' => [__('Authentication token is invalid or expired')]];
@@ -58,7 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return ApiResponse::make(
                     404,
-                    __('The requested resource does not exist')
+                    $e->getMessage() ?: __('The requested resource does not exist')
                 );
             }
         });

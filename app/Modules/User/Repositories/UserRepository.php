@@ -46,6 +46,16 @@ class UserRepository extends BaseRepository
         return $this->baseSearch($search, $relations)->get();
     }
 
+    public function searchVeterinaries(?string $search, bool|array $relations = false): Collection
+    {
+        return $this->baseSearch($search, $relations)
+            ->where(function (Builder $q) {
+                $q->whereHas('permissions', fn(Builder $p) => $p->where('name', 'ILIKE', 'veterinary%'))
+                    ->orWhereHas('roles.permissions', fn(Builder $p) => $p->where('name', 'ILIKE', 'veterinary%'));
+            })
+            ->get();
+    }
+
     public function searchCount(?string $search, bool|array $relations = false): int
     {
         return $this->baseSearch($search, $relations)->count();

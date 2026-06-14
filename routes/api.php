@@ -8,8 +8,10 @@ use App\Modules\Schedule\Controllers\ScheduleApiController;
 use App\Modules\User\Controllers\Api\UserDownloadController;
 use App\Modules\User\Controllers\Api\UserPaginateApiController;
 use App\Modules\Permission\Controllers\Api\ShowPermissionsApiController;
+use App\Modules\Schedule\Controllers\ScheduleDayApiController;
+use App\Modules\User\Controllers\Api\VeterinaryApiController;
 
-Route::middleware('api')->group(function () {
+Route::name('api.')->middleware('api')->group(function () {
 
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
@@ -24,13 +26,13 @@ Route::middleware('api')->group(function () {
 
     Route::middleware('auth:api')->group(function () {
 
-        // Permissions routes
+        // Permissions
         Route::get('/permissions', ShowPermissionsApiController::class)->name('permissions.index');
 
-        // Roles routes
+        // Roles
         Route::apiResource('roles', RoleApiController::class);
 
-        // Users routes
+        // Users
         Route::name('')->group(function () {
             Route::get('/users/paginate', [UserPaginateApiController::class, 'paginate'])->name('users.paginate');
             Route::get('/users/offset-paginate', [UserPaginateApiController::class, 'offsetPaginate'])->name('users.offset-paginate');
@@ -38,15 +40,22 @@ Route::middleware('api')->group(function () {
             Route::get('/users/{user}/download/avatar', [UserDownloadController::class, 'avatar'])
                 ->withoutMiddleware(['auth:api'])->name('users.download.avatar');
 
-            // Route::post('/users/{user}', [UserApiController::class, 'update'])->name('users.update');
-            Route::apiResource('users', UserApiController::class);
+            Route::apiResource('users', UserApiController::class)->parameters(['user' => 'userId']);
         });
 
-        // Schedules routes
-        Route::name('')->group(function () {
-            Route::get('/schedules/config', [ScheduleApiController::class, 'config'])->name('schedules.config');
+        // Veterinarians
+        Route::name('veterinarians.')->group(function () {
+            Route::apiResource('/veterinarians', VeterinaryApiController::class)->only(['index', 'store', /*'show' */]);
 
-            Route::apiResource('schedules', ScheduleApiController::class);
+            // Schedules
+            Route::name('schedules.')->group(function () {
+                Route::get('/veterinarians/schedules/config', [ScheduleApiController::class, 'config'])->name('config');
+
+                Route::name('')->group(function () {
+                    Route::apiResource('/veterinarians/schedules/day', ScheduleDayApiController::class)->parameters(['day' => 'scheduleDayId'])->only(['store', 'show', 'destroy']);
+                    Route::post('/veterinarians/schedules/day/upsert', [ScheduleDayApiController::class, 'upsert'])->name('day.upsert');
+                });
+            });
         });
     });
 });

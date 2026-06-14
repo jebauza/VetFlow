@@ -12,12 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('schedule_day_hour', function (Blueprint $table) {
-            $table->foreignUuid('schedule_day_id')->constrained('schedule_days')->onDelete('cascade');
-            $table->foreignUuid('schedule_hour_id')->constrained('schedule_hours')->onDelete('cascade')->index();
+            $table->uuid('id')->primary();
+
+            $table->uuid('schedule_day_id');
+            $table->foreign('schedule_day_id')->references('id')->on('schedule_days')->cascadeOnDelete();
+
+            $table->uuid('schedule_hour_id')->index();
+            $table->foreign('schedule_hour_id')->references('id')->on('schedule_hours')->cascadeOnDelete();
 
             $table->timestamps();
 
-            $table->primary(['schedule_day_id', 'schedule_hour_id']);
+            $table->unique(['schedule_day_id', 'schedule_hour_id']);
         });
     }
 

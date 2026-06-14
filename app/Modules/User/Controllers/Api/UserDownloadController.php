@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use App\Common\Responses\ApiResponse;
 use Illuminate\Support\Facades\Storage;
 use App\Common\Controllers\ApiController;
+use App\Common\Helpers\UuidHelper;
 use App\Modules\User\Services\UserService;
 
 class UserDownloadController extends ApiController
@@ -46,7 +47,7 @@ class UserDownloadController extends ApiController
      */
     public function avatar(string $id)
     {
-        if (!Str::isUuid($id)) {
+        if (!UuidHelper::isUuid($id)) {
             return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
         }
 

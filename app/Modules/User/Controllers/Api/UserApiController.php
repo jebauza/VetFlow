@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\User\DTOs\UpdateUserDTO;
 use App\Common\Controllers\ApiController;
+use App\Common\Helpers\UuidHelper;
 use Illuminate\Support\Facades\Validator;
 use App\Modules\User\Services\UserService;
 use App\Modules\User\Resources\UserResource;
@@ -117,10 +118,7 @@ class UserApiController extends ApiController
     public function store(StoreUserRequest $request): JsonResponse
     {
         $dto = CreateUserDTO::fromRequest($request);
-
-        $user = DB::transaction(function () use ($dto) {
-            return $this->service->create($dto);
-        });
+        $user = $this->service->create($dto);
 
         return ApiResponse::created(new UserResource($user));
     }
@@ -170,8 +168,8 @@ class UserApiController extends ApiController
      */
     public function show(string $id): JsonResponse
     {
-        if (!Str::isUuid($id)) {
-            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
+        if (!UuidHelper::isUuid($id)) {
+            return ApiResponse::validation(['userId' => [__('Must be a valid UUID.')]]);
         }
 
         $user = $this->service->findById($id);
@@ -282,13 +280,11 @@ class UserApiController extends ApiController
      */
     public function destroy(string $id)
     {
-        if (!Str::isUuid($id)) {
-            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
+        if (!UuidHelper::isUuid($id)) {
+            return ApiResponse::validation(['userId' => [__('Must be a valid UUID.')]]);
         }
 
-        DB::transaction(function () use ($id) {
-            return $this->service->delete($id);
-        });
+        $this->service->delete($id);
 
         return ApiResponse::success(__('Deleted successfully'));
     }

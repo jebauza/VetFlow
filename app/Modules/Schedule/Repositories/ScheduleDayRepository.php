@@ -2,9 +2,10 @@
 
 namespace App\Modules\Schedule\Repositories;
 
+use App\Common\Helpers\DbExceptionHelper;
 use App\Common\Repositories\BaseRepository;
 use App\Modules\Schedule\Models\ScheduleDay;
-use App\Modules\Schedule\Models\ScheduleHour;
+use Illuminate\Database\QueryException;
 
 class ScheduleDayRepository extends BaseRepository
 {
@@ -13,17 +14,39 @@ class ScheduleDayRepository extends BaseRepository
         parent::__construct($model);
     }
 
-    public function syncHours(string $userId, string $date, array $hourIds): ScheduleDay
+    /**
+     * @param ScheduleDay|string $scheduleDay
+     * @param string[] $hourIds
+     */
+    public function assignHours(ScheduleDay|string $scheduleDay, array $hourIds): ScheduleDay
     {
-        $day = ScheduleDay::updateOrCreate([
-            ScheduleDay::USER_ID => $userId,
-            ScheduleDay::DATE => $date
-        ]);
+        if (is_string($scheduleDay)) {
+            $scheduleDay = $this->findOrFail($scheduleDay);
+        }
 
-        $day->hours()->sync($hourIds);
-
-        return $day->load('hours');
+        try {
+            $scheduleDay->hours()->attach($hourIds);
+            return $scheduleDay;
+        } catch (QueryException $e) {
+            DbExceptionHelper::handle(static::class, $e);
+        }
     }
 
-    public function test() {}
+    /**
+     * @param ScheduleDay|string $scheduleDay
+     * @param string[] $hourIds
+     */
+    public function syncHours(ScheduleDay|string $scheduleDay, array $hourIds): ScheduleDay
+    {
+        if (is_string($scheduleDay)) {
+            $scheduleDay = $this->findOrFail($scheduleDay);
+        }
+
+        try {
+            $scheduleDay->hours()->sync($hourIds);
+            return $scheduleDay;
+        } catch (QueryException $e) {
+            DbExceptionHelper::handle(static::class, $e);
+        }
+    }
 }

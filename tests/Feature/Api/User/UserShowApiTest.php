@@ -95,7 +95,7 @@ class UserShowApiTest extends ApiTestCase
             ->assertJsonPath('message', __('Validation errors'))
             ->assertJsonStructure([
                 'message',
-                'errors' => ['user'],
+                'errors' => ['userId'],
             ]);
     }
 }

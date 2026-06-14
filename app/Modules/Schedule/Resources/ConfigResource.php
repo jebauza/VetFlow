@@ -2,13 +2,13 @@
 
 namespace App\Modules\Schedule\Resources;
 
-use Illuminate\Http\Request;
-use InvalidArgumentException;
-use App\Modules\Schedule\DTOs\ConfigDTO;
-use App\Modules\Schedule\DTOs\HourItemDTO;
-use App\Modules\Schedule\Models\ScheduleHour;
 use App\Modules\Role\Resources\RoleLiteResource;
+use App\Modules\Schedule\DTOs\Outputs\ConfigDTO;
+use App\Modules\Schedule\DTOs\Outputs\HourItemDTO;
+use App\Modules\Schedule\Models\ScheduleHour;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use InvalidArgumentException;
 
 /**
  * @property-read ConfigDTO $resource

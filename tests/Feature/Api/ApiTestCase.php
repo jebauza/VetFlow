@@ -64,9 +64,7 @@ abstract class ApiTestCase extends BaseTestCase
             'Authorization' => "Bearer {$token}",
         ])
             ->assertNotFound()
-            ->assertJson([
-                'message' => __('The requested resource does not exist'),
-            ]);
+            ->assertJsonStructure(['message']);
     }
 
     protected function assertEndpointReturnsForbidden(string $method, string $api, string $token = null, array $data = []): void

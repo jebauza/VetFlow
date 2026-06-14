@@ -2,7 +2,6 @@
 
 namespace App\Modules\Schedule\Controllers;
 
-use Illuminate\Http\Request;
 use App\Common\Responses\ApiResponse;
 use App\Common\Controllers\ApiController;
 use App\Modules\Schedule\Resources\ConfigResource;
@@ -14,6 +13,34 @@ class ScheduleApiController extends ApiController
         protected readonly ScheduleService $service
     ) {}
 
+    /**
+     * @lrd:start
+     *
+     * **Notes**
+     * - Requires **Access Token** obtained from **auth/login**, configuration in **auth/me**.
+     *
+     * **Description**
+     * - Returns the schedule configuration: the list of veterinary roles and all available time slots grouped by hour.
+     *
+     * **200 OK**
+     * ```json
+     *{"message":"OK","data":{"roles":[{"id":"a1030860-2a5d-482d-b4d2-8450ea436186","name":"Vet"}],"hours":[{"hour":8,"segments":[{"id":"507412b6-2b08-4ea9-912d-1a083d5cfc0d","start":"08:00:00","end":"08:15:00"},{"id":"607412b6-2b08-4ea9-912d-1a083d5cfc0d","start":"08:15:00","end":"08:30:00"},{"id":"707412b6-2b08-4ea9-912d-1a083d5cfc0d","start":"08:30:00","end":"08:45:00"},{"id":"807412b6-2b08-4ea9-912d-1a083d5cfc0d","start":"08:45:00","end":"09:00:00"}]}]}}
+     * ```
+     *
+     * **401 Unauthorized**
+     * ```json
+     *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
+     * ```
+     *
+     * **500 Internal Server Error**
+     * ```json
+     *{"message":"Internal Server Error"}
+     * ```
+     *
+     * @lrd:end
+     *
+     * @LRDresponses 200|401|500
+     */
     public function config()
     {
         $dto = $this->service->config();
@@ -21,45 +48,5 @@ class ScheduleApiController extends ApiController
         return ApiResponse::successData(
             new ConfigResource($dto)
         );
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

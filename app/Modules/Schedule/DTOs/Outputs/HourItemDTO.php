@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Schedule\DTOs;
+namespace App\Modules\Schedule\DTOs\Outputs;
 
 use Illuminate\Support\Collection;
 use App\Modules\Schedule\Models\ScheduleHour;

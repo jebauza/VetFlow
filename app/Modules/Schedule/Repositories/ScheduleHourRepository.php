@@ -3,7 +3,6 @@
 namespace App\Modules\Schedule\Repositories;
 
 use App\Common\Repositories\BaseRepository;
-use App\Modules\Schedule\Models\ScheduleDay;
 use Illuminate\Database\Eloquent\Collection;
 use App\Modules\Schedule\Models\ScheduleHour;
 

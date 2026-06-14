@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Schedule\DTOs;
+namespace App\Modules\Schedule\DTOs\Outputs;
 
 use App\Modules\Role\Models\Role;
 use Illuminate\Support\Collection;

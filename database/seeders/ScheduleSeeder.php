@@ -2,12 +2,17 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use App\Modules\Schedule\Models\ScheduleHour;
 
 class ScheduleSeeder extends Seeder
 {
+    private const START = '08:00:00';
+    private const END   = '16:00:00';
+    private const INTERVAL_MINUTES = 15;
+
     /**
      * Run the database seeds.
      */
@@ -15,24 +20,24 @@ class ScheduleSeeder extends Seeder
     {
         ScheduleHour::truncate();
 
-        $scheduleHours = [];
-        $startTime = new \DateTime('08:00:00');
-        $endTime = new \DateTime('16:00:00');
-        $interval = new \DateInterval('PT15M'); // 15 min
+        $current  = Carbon::createFromTimeString(self::START);
+        $endTime  = Carbon::createFromTimeString(self::END);
+        $now      = now();
 
-        while ($startTime < $endTime) {
-            $end = clone $startTime;
-            $end->add($interval);
+        $scheduleHours = [];
+
+        while ($current->lt($endTime)) {
+            $next = $current->copy()->addMinutes(self::INTERVAL_MINUTES);
 
             $scheduleHours[] = [
-                'id' => (string) Str::uuid(),
-                'start' => $startTime->format('H:i:s'),
-                'end' => $end->format('H:i:s'),
-                'hour' => $startTime->format('H'),
-                'created_at' => now(),
+                'id'         => (string) Str::uuid(),
+                'start'      => $current->toTimeString(),
+                'end'        => $next->toTimeString(),
+                'hour'       => $current->format('H'),
+                'created_at' => $now,
             ];
 
-            $startTime->add($interval);
+            $current->addMinutes(self::INTERVAL_MINUTES);
         }
 
         ScheduleHour::insert($scheduleHours);
