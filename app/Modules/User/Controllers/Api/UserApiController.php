@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\User\DTOs\UpdateUserDTO;
 use App\Common\Controllers\ApiController;
+use App\Common\Helpers\UuidHelper;
 use Illuminate\Support\Facades\Validator;
 use App\Modules\User\Services\UserService;
 use App\Modules\User\Resources\UserResource;
@@ -46,6 +47,11 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **500 Internal Server Error**
      * ```json
      *{"message":"Internal Server Error"}
@@ -53,7 +59,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|500
+     * @LRDresponses 200|401|403|500
      */
     public function index(Request $request): JsonResponse
     {
@@ -90,6 +96,11 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **422 Unprocessable Entity**
      * ```json
      *{"message":"Validation errors","errors":{"email":["The email field is required."],"name":["The name field is required."],"surname":["The surname field is required."],"password":["The password field is required."]}}
@@ -102,15 +113,12 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 201|401|422|500
+     * @LRDresponses 201|401|403|422|500
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
         $dto = CreateUserDTO::fromRequest($request);
-
-        $user = DB::transaction(function () use ($dto) {
-            return $this->service->create($dto);
-        });
+        $user = $this->service->create($dto);
 
         return ApiResponse::created(new UserResource($user));
     }
@@ -134,9 +142,14 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -151,12 +164,12 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function show(string $id): JsonResponse
     {
-        if (!Str::isUuid($id)) {
-            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
+        if (!UuidHelper::isUuid($id)) {
+            return ApiResponse::validation(['userId' => [__('Must be a valid UUID.')]]);
         }
 
         $user = $this->service->findById($id);
@@ -185,6 +198,16 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
+     * **404 Not Found**
+     * ```json
+     *{"message":"The requested resource does not exist"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
      *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
@@ -201,7 +224,7 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function update(UpdateUserRequest $request, string $id)
     {
@@ -235,9 +258,14 @@ class UserApiController extends ApiController
      *{"message":"Unauthorized","errors":{"auth":["Authentication token is invalid or expired"]}}
      * ```
      *
+     * **403 Forbidden**
+     * ```json
+     *{"message":"You do not have permission to access this resource"}
+     * ```
+     *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -252,17 +280,15 @@ class UserApiController extends ApiController
      *
      * @lrd:end
      *
-     * @LRDresponses 200|401|404|422|500
+     * @LRDresponses 200|401|403|404|422|500
      */
     public function destroy(string $id)
     {
-        if (!Str::isUuid($id)) {
-            return ApiResponse::validation(['user' => [__('Must be a valid UUID.')]]);
+        if (!UuidHelper::isUuid($id)) {
+            return ApiResponse::validation(['userId' => [__('Must be a valid UUID.')]]);
         }
 
-        DB::transaction(function () use ($id) {
-            return $this->service->delete($id);
-        });
+        $this->service->delete($id);
 
         return ApiResponse::success(__('Deleted successfully'));
     }

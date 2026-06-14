@@ -31,4 +31,9 @@ class UuidHelper
         }
         return $value;
     }
+
+    public static function isUuid(string $id): bool
+    {
+        return Uuid::isValid($id);
+    }
 }

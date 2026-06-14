@@ -99,4 +99,14 @@ class RoleRepository extends BaseRepository
 
         return $role;
     }
+
+    public function findByPermissionPrefix(string $prefix): Collection
+    {
+        return Role::query()
+            ->whereHas('permissions', fn(Builder $q) =>
+                $q->where(Permission::TABLE . '.' . Permission::NAME, 'LIKE', $prefix . '%')
+            )
+            ->orderBy(Role::NAME)
+            ->get();
+    }
 }

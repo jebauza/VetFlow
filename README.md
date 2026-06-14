@@ -101,6 +101,8 @@ To run the automated test suite, use the following command:
 
 ```bash
 ./vendor/bin/sail artisan test
+
+php artisan test --filter=AuthRegisterApiTest
 ```
 
 ## 🧪 Telescope

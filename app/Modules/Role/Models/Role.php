@@ -25,6 +25,11 @@ class Role extends SpatieRole
     const ASSISTANT_NAME = 'Assistant';
     const RECEPTIONIST_NAME = 'Receptionist';
 
+    const PERMISSION_REGISTER = 'role.register';
+    const PERMISSION_LIST = 'role.list';
+    const PERMISSION_SHOW = 'role.show';
+    const PERMISSION_EDIT = 'role.edit';
+    const PERMISSION_DELETE = 'role.delete';
 
     public function scopeSearch(Builder $query, ?string $search): Builder
     {

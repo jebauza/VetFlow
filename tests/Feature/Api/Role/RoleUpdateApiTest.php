@@ -29,10 +29,10 @@ class RoleUpdateApiTest extends ApiTestCase
         $this->permissionRepo = new PermissionRepository(new Permission);
         $this->roleRepo = new RoleRepository(new Role);
 
-        $userAuth = User::factory()->create();
+        $userAuth = $this->superAdmin();
         $this->token = $this->getAccessToken($userAuth);
 
-        /** @var Role $this->role */
+        /** @var Role */
         $this->role = $this->roleRepo->random();
         $this->payload = [
             "name" => "Role Test",
@@ -47,7 +47,7 @@ class RoleUpdateApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_update_200()
+    public function test_update_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->putJson(
@@ -96,13 +96,13 @@ class RoleUpdateApiTest extends ApiTestCase
         $response->assertJsonPath('data', $data);
     }
 
-    public function test_update_404()
+    public function test_update_not_found_404()
     {
         $this->assertEndpointReturnsNotFound(
             self::PUT,
             str_replace(':id', Str::uuid(), $this->api),
+            $this->token,
             $this->payload,
-            $this->token
         );
     }
 

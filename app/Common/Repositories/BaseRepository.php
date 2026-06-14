@@ -5,9 +5,13 @@ namespace App\Common\Repositories;
 use App\Common\DTOs\PagePaginationDTO;
 use Illuminate\Database\Eloquent\Model;
 use App\Common\DTOs\OffsetPaginationDTO;
+use App\Common\Helpers\DbExceptionHelper;
+use App\Common\Helpers\UuidHelper;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 abstract class BaseRepository
 {
@@ -23,19 +27,36 @@ abstract class BaseRepository
         return $this->model->newQuery();
     }
 
-    public function create(array $data)
+    public function create(array $data): Model
     {
-        return $this->model->create($data);
+        try {
+            return $this->model->create($data);
+        } catch (QueryException $e) {
+            DbExceptionHelper::handle(static::class, $e);
+        }
     }
 
-    public function update(Model|string $record, array $data)
+    public function updateOrCreate(array $attributes, array $values = []): Model
+    {
+        try {
+            return $this->model->updateOrCreate($attributes, $values);
+        } catch (QueryException $e) {
+            DbExceptionHelper::handle(static::class, $e);
+        }
+    }
+
+    public function update(Model|string $record, array $data): Model
     {
         if (is_string($record)) {
             $record = $this->model->findOrFail($record);
         }
-        $record->update($data);
 
-        return $record;
+        try {
+            $record->update($data);
+            return $record;
+        } catch (QueryException $e) {
+            DbExceptionHelper::handle(static::class, $e);
+        }
     }
 
     public function delete(Model|string $record)
@@ -75,11 +96,23 @@ abstract class BaseRepository
 
     public function findOrFail(string $id)
     {
+        if (!UuidHelper::isUuid($id)) {
+            throw new ModelNotFoundException(
+                "Invalid UUID '{$id}' for [" . get_class($this->model) . "]."
+            );
+        }
+
         return $this->model->findOrFail($id);
     }
 
     public function findOrFailWithRelations(string $id, array $relations)
     {
+        if (!UuidHelper::isUuid($id)) {
+            throw new ModelNotFoundException(
+                "Invalid UUID '{$id}' for [" . get_class($this->model) . "]."
+            );
+        }
+
         return $this->model->with($relations)->findOrFail($id);
     }
 

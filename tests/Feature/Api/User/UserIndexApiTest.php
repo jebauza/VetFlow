@@ -30,7 +30,7 @@ class UserIndexApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_index_200()
+    public function test_index_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->getJson($this->api)
@@ -74,7 +74,7 @@ class UserIndexApiTest extends ApiTestCase
             ->assertJsonPath('data', $data);
     }
 
-    public function test_index_search_200()
+    public function test_index_search_ok_200()
     {
         $search = 'a';
         $query = http_build_query([

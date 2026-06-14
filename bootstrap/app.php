@@ -12,6 +12,7 @@ use App\Modules\Auth\Exceptions\LoginFailedException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,7 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-
         $exceptions->renderable(function (AuthenticationException|LoginFailedException $e, $request) {
             if ($request->is('api/*')) {
                 $errors = ['auth' => [__('Authentication token is invalid or expired')]];
@@ -44,22 +44,20 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->renderable(function (AuthorizationException $e, $request) {
-            if ($request->is('api/*')) {
-                return ApiResponse::error(
-                    __('Forbidden'),
+        $exceptions->renderable(function (AuthorizationException|AccessDeniedHttpException $e, $request) {
+            if ($request->is('api/*') && $e->getStatusCode() === 403) {
+                return ApiResponse::make(
                     403,
-                    ['auth' => [__('You do not have permission to access this resource')]]
+                    __('You do not have permission to access this resource')
                 );
             }
         });
 
         $exceptions->renderable(function (NotFoundHttpException|ModelNotFoundException $e, $request) {
             if ($request->is('api/*')) {
-                return ApiResponse::error(
-                    __('Not Found'),
+                return ApiResponse::make(
                     404,
-                    ['resource' => [__('The requested resource does not exist')]]
+                    $e->getMessage() ?: __('The requested resource does not exist')
                 );
             }
         });
@@ -70,12 +68,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->renderable(function (HttpExceptionInterface $e, $request) {
-            if ($request->is('api/*')) {
-                return ApiResponse::error(
-                    $e->getMessage() ?: __('HTTP error'),
-                    $e->getStatusCode()
-                );
-            }
-        });
+        // $exceptions->renderable(function (HttpExceptionInterface $e, $request) {
+        //     if ($request->is('api/*')) {
+        //         dd($e);
+        //         return ApiResponse::error(
+        //             $e->getMessage() ?: __('HTTP error'),
+        //             $e->getStatusCode()
+        //         );
+        //     }
+        // });
     })->create();

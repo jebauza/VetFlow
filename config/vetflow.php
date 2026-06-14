@@ -6,28 +6,33 @@ return [
 
         'role.register',
         'role.list',
+        'role.show',
         'role.edit',
         'role.delete',
 
         'veterinary.register',
         'veterinary.list',
+        'veterinary.show',
         'veterinary.edit',
         'veterinary.delete',
         'veterinary.profile',
 
         'pet.register',
         'pet.list',
+        'pet.show',
         'pet.edit',
         'pet.delete',
         'pet.profile',
 
         'staff.register',
         'staff.list',
+        'staff.show',
         'staff.edit',
         'staff.delete',
 
         'appointment.register',
         'appointment.list',
+        'appointment.show',
         'appointment.edit',
         'appointment.delete',
 
@@ -38,11 +43,13 @@ return [
 
         'vaccionation.register',
         'vaccionation.list',
+        'vaccionation.show',
         'vaccionation.edit',
         'vaccionation.delete',
 
         'surgeries.register',
         'surgeries.list',
+        'surgeries.show',
         'surgeries.edit',
         'surgeries.delete',
 

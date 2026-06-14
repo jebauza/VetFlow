@@ -33,7 +33,7 @@ class UserCursorPaginateApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_cursor_paginate_200()
+    public function test_cursor_paginate_ok_200()
     {
         $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->getJson($this->api)
@@ -93,7 +93,7 @@ class UserCursorPaginateApiTest extends ApiTestCase
         $this->assertNotEquals($response1->json('data'), $response2->json('data'), 'The list of users should have changed.');
     }
 
-    public function test_cursor_paginate_search_200()
+    public function test_cursor_paginate_search_ok_200()
     {
         $search = 'a';
         $total = $this->userRepo->searchCount($search);

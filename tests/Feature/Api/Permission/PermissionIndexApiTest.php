@@ -31,7 +31,7 @@ class PermissionIndexApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_index_200()
+    public function test_index_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
             ->getJson($this->api)

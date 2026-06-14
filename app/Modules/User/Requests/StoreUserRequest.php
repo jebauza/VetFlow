@@ -5,7 +5,7 @@ namespace App\Modules\User\Requests;
 use App\Modules\User\Models\User;
 use App\Common\Requests\ApiRequest;
 use App\Modules\User\DTOs\CreateUserDTO;
-use App\Modules\Role\Repositories\RoleRepository;
+use App\Modules\Role\Services\RoleService;
 
 class StoreUserRequest extends ApiRequest
 {
@@ -45,9 +45,11 @@ class StoreUserRequest extends ApiRequest
 
     public function checkRole($validator): void
     {
-        $roleRepo = app(RoleRepository::class);
+        $roleService = app(RoleService::class);
 
-        if (!$roleRepo->find($this->{CreateUserDTO::ROLE_ID})) {
+        try {
+            $roleService->findById($this->{CreateUserDTO::ROLE_ID});
+        } catch (\Exception $e) {
             $validator->errors()->add(
                 CreateUserDTO::ROLE_ID,
                 "The role (" . $this->{CreateUserDTO::ROLE_ID} . ") is not valid."

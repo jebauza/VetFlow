@@ -27,7 +27,7 @@ class AuthRefreshApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_refresh_200()
+    public function test_refresh_ok_200()
     {
         $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->getJson($this->api)

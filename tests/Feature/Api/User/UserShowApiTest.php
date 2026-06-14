@@ -32,7 +32,7 @@ class UserShowApiTest extends ApiTestCase
         $this->assertEndpointRequiresAuth(self::GET, $this->api);
     }
 
-    public function test_show_200()
+    public function test_show_ok_200()
     {
         $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}",])
             ->getJson(str_replace(':id', $this->userAuth->{User::ID}, $this->api))
@@ -77,12 +77,11 @@ class UserShowApiTest extends ApiTestCase
         $response->assertJsonPath('data', $data);
     }
 
-    public function test_show_404()
+    public function test_show_not_found_404()
     {
         $this->assertEndpointReturnsNotFound(
             self::GET,
             str_replace(':id', Str::uuid(), $this->api),
-            [],
             $this->token
         );
     }
@@ -96,7 +95,7 @@ class UserShowApiTest extends ApiTestCase
             ->assertJsonPath('message', __('Validation errors'))
             ->assertJsonStructure([
                 'message',
-                'errors' => ['user'],
+                'errors' => ['userId'],
             ]);
     }
 }

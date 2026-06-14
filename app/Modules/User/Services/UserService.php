@@ -3,15 +3,14 @@
 namespace App\Modules\User\Services;
 
 use App\Modules\User\Models\User;
-use Illuminate\Http\UploadedFile;
 use App\Common\Helpers\FileHelper;
-use Illuminate\Support\Facades\Hash;
 use App\Common\DTOs\PagePaginationDTO;
 use App\Common\DTOs\OffsetPaginationDTO;
 use App\Modules\User\DTOs\CreateUserDTO;
 use App\Modules\User\DTOs\UpdateUserDTO;
 use App\Modules\User\Repositories\UserRepository;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Support\Facades\DB;
 
 class UserService
 {
@@ -80,15 +79,17 @@ class UserService
         }
 
         try {
-            $user = $this->userRepo->create($dto->toArray());
+            $user = DB::transaction(function () use ($dto) {
+                $user = $this->userRepo->create($dto->toArray());
 
-            // Telescope::store(app('request'));
+                if ($dto->{CreateUserDTO::ROLE_ID}) {
+                    $user = $this->userRepo->assignRoles($user, [$dto->{CreateUserDTO::ROLE_ID}]);
+                }
 
-            if ($dto->{CreateUserDTO::ROLE_ID}) {
-                $user = $this->userRepo->assignRoles($user, [$dto->{CreateUserDTO::ROLE_ID}]);
-            }
+                return $this->userRepo->loadRelations($user, false, true);
+            });
 
-            return $this->userRepo->loadRelations($user, false, true);
+            return $user;
         } catch (\Throwable $th) {
             if (is_string($dto->{CreateUserDTO::AVATAR})) {
                 FileHelper::deleteFile($dto->{CreateUserDTO::AVATAR}, 'public');
@@ -136,7 +137,9 @@ class UserService
     {
         $user = $this->userRepo->findOrFail($id);
 
-        $this->userRepo->delete($user->{User::ID});
+        DB::transaction(function () use ($user) {
+            $this->userRepo->delete($user->{User::ID});
+        });
 
         if ($user->{User::AVATAR}) {
             FileHelper::deleteFile($user->{User::AVATAR}, 'public');

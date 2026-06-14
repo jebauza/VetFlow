@@ -6,9 +6,11 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Modules\Role\DTOs\RoleDTO;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Role\Models\Role;
 use App\Common\Responses\ApiResponse;
 use App\Common\Controllers\ApiController;
+use App\Common\Helpers\UuidHelper;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use App\Modules\Role\Services\RoleService;
 use App\Modules\Role\Resources\RoleResource;
@@ -54,6 +56,8 @@ class RoleApiController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize(Role::PERMISSION_LIST);
+
         $validator = Validator::make($request->all(), [
             'search' => 'nullable|string',
         ]);
@@ -101,11 +105,10 @@ class RoleApiController extends ApiController
      */
     public function store(StoreRoleRequest $request): JsonResponse
     {
-        $dto = new RoleDTO(...$request->validated());
+        Gate::authorize(Role::PERMISSION_REGISTER);
 
-        $role = DB::transaction(function () use ($dto) {
-            return $this->service->create($dto);
-        });
+        $dto = new RoleDTO(...$request->validated());
+        $role = $this->service->create($dto);
 
         return ApiResponse::created(new RoleResource($role));
     }
@@ -131,7 +134,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -150,14 +153,14 @@ class RoleApiController extends ApiController
      */
     public function show(string $id): JsonResponse
     {
-        if (!Str::isUuid($id)) {
+        Gate::authorize(Role::PERMISSION_SHOW);
+
+        if (!UuidHelper::isUuid($id)) {
             return ApiResponse::validation(['role' => [__('Must be a valid UUID.')]]);
         }
 
-        $role = $this->service->findById($id);
-
         return ApiResponse::successData(
-            new RoleResource($role)
+            new RoleResource($this->service->findById($id))
         );
     }
 
@@ -182,7 +185,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -199,17 +202,14 @@ class RoleApiController extends ApiController
      *
      * @LRDresponses 200|401|404|422|500
      */
-    public function update(UpdateRoleRequest $request, string $id)
+    public function update(UpdateRoleRequest $request, string $id): JsonResponse
     {
+        Gate::authorize(Role::PERMISSION_EDIT);
+
         $dto = new RoleDTO(...$request->validated());
+        $role = $this->service->update($id, $dto);
 
-        $role = DB::transaction(function () use ($id, $dto) {
-            return $this->service->update($id, $dto);
-        });
-
-        return ApiResponse::successData(
-            new RoleResource($role)
-        );
+        return ApiResponse::successData(new RoleResource($role));
     }
 
     /**
@@ -233,7 +233,7 @@ class RoleApiController extends ApiController
      *
      * **404 Not Found**
      * ```json
-     *{"message":"Not Found","errors":{"resource":["The requested resource does not exist"]}}
+     *{"message":"The requested resource does not exist"}
      * ```
      *
      * **422 Unprocessable Entity**
@@ -252,13 +252,13 @@ class RoleApiController extends ApiController
      */
     public function destroy(string $id): JsonResponse
     {
-        if (!Str::isUuid($id)) {
+        Gate::authorize(Role::PERMISSION_DELETE);
+
+        if (!UuidHelper::isUuid($id)) {
             return ApiResponse::validation(['role' => [__('Must be a valid UUID.')]]);
         }
 
-        DB::transaction(function () use ($id) {
-            return $this->service->delete($id);
-        });
+        $this->service->delete($id);
 
         return ApiResponse::success(__('Deleted successfully'));
     }

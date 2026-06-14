@@ -89,7 +89,7 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        self::PASSWORD,
         'remember_token',
     ];
 
@@ -102,7 +102,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // Laravel handles Hash::make() automatically
+            self::PASSWORD => 'hashed', // Laravel handles Hash::make() automatically
         ];
     }
 
